@@ -109,8 +109,12 @@ class j18Main():
         print("j18 version " + Environment.version)
 
         try:
-            current_locale = locale.getlocale()
-            help_file_path = res_from("resource/help_" + str(current_locale[0]) + ".txt")
+            current_locale = str(locale.getlocale()[0])
+
+            # Windows에서는 locale 이름이 다르다
+            if current_locale == "Korean_Korea": current_locale = "ko_KR"
+
+            help_file_path = res_from("resource/help_" + current_locale + ".txt")
             with open (help_file_path, "r", encoding='UTF8') as help_file:
                 print(help_file.read())
         except:
