@@ -1,0 +1,18 @@
+Usage:   
+  j18 <command> [options]
+
+Commands:
+  --help                      Show help.
+  --show-config               Show Config file.
+  --get-token                 Get api token from seafile server.
+  --get-repo-list             Get repository list from seafile server.
+  --download                  Download remote file in seafile.
+  --ls                        Get sub item list from seafile server target directory.
+  --filedetail                Get File Detail Infomation.
+
+General Options:
+  -s{server_name}            Read server address and api token from config file.
+  -r{repository_name}        Read repository id from config file.
+  -c{connect_name}           Read server name and repository name from config file. Then apply server and repository information.
+  -t{seafile_path}           Set Target Path.
+  -d{local_path}             Set Destination Path.

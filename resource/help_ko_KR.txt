@@ -1,0 +1,17 @@
+Usage:   
+  j18 <명령> [옵션]
+
+Commands:
+  --help                      도움말 보기
+  --get-token                 seafile 서버에서 API TOKEN을 얻습니다.
+  --get-repo-list             seafile 서버내의 저장소 리스트를 얻습니다.
+  --download                  seafile 서버에서 파일을 다운받습니다.
+  --ls                        seafile 서버의 TARGET 아래의 하위 목록을 확인합니다.
+  --filedetail                seafile 서버의 TARGET (파일)의 상세 정보를 얻습니다.
+
+General Options:
+  -s{server_name}            config 파일에서 seafile 주소와 API TOKEN을 읽습니다.
+  -r{repository_name}        config 파일에서 저장소 ID를 읽습니다.
+  -c{connect_name}           config 파일에서 서버명과 저장소명을 읽습니다. 그리고 이것을 이용해 서버와 저장소 정보를 읽습니다.
+  -t{seafile_path}           seafile 내의 TARGET 경로를 지정합니다.
+  -d{local_path}             local 내의 경로를 지정합니다.
