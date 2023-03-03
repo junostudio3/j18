@@ -14,15 +14,18 @@ class jConfigParser:
     def Load(self, file_path:str):
         try:
             self.file.read(file_path, encoding="UTF8")
+
         except:
             self.file.read(file_path)
 
     def Save(self, file_path:str):
-        with open(file_path, 'wt', encoding="UTF8") as configfile:
-            self.file.write(configfile)
-            return True
-        
-        return False
+        try:
+            with open(file_path, 'wt', encoding="UTF8") as configfile:
+                self.file.write(configfile)
+                return True
+
+        except:
+            return False
     
     def ReadBoolean(self, category:str, key:str, default_value:bool):
         return self.ReadInt(category, key, int(default_value)) != 0
