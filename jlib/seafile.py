@@ -272,7 +272,10 @@ class jSeaFile:
             for json_item in json_object:
                 name = json_item['name']
                 is_directory = json_item['type'] == 'dir'
-                parent_dir = json_item['parent_dir']
+                if 'parent_dir' in json_item:
+                    parent_dir = json_item['parent_dir']
+                else:
+                    parent_dir = "/"
                 mtime = int(json_item['mtime'])
                 size = 0
                 if is_directory == False:
@@ -295,7 +298,10 @@ class jSeaFile:
             for json_item in json_object:
                 name = json_item['name']
                 is_directory = json_item['type'] == 'dir'
-                parent_dir = json_item['parent_dir']
+                if 'parent_dir' in json_item:
+                    parent_dir = json_item['parent_dir']
+                else:
+                    parent_dir = "/"
                 mtime = int(json_item['mtime'])
                 size = 0
                 if is_directory == False:
