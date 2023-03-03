@@ -71,81 +71,72 @@ class j18Main():
         self.target = "/"
         self.dest = os.getcwd()
         self.skip_same_file = False
+        self.arguments = sys.argv
 
+    def GetOptions(self):
         # 실행 환경 관련 인자를 먼저 불러온다
-        for arg_index in range(1, len(sys.argv)):
-            if sys.argv[arg_index][:3] == "-r:":
-                if self.SetRepository(sys.argv[arg_index][3:]) == False: return
-                continue
+        arg_index = -1
 
-            if sys.argv[arg_index] == "-skip-same-file":
-                self.skip_same_file = True
-                continue
-
-            if sys.argv[arg_index][:3] == "-t:":
-                self.target = sys.argv[arg_index][3:]
-                continue
-
-            if sys.argv[arg_index][:3] == "-d:":
-                self.dest = os.path.expanduser(sys.argv[arg_index][3:])
-                continue
-
-            if sys.argv[arg_index][:3] == "-s:":
-                if self.SetServer(sys.argv[arg_index][3:]) == False: return
-                continue
-
-            if sys.argv[arg_index][:3] == "-c:":
-                if self.SetServerAndRepository(sys.argv[arg_index][3:]) == False: return
-                continue
-
-        # 실행 관련 인자들을 찾는다 먼저 찾은 명령을 수행하고 끝낸다
-        for arg_index in range(1, len(sys.argv)):
-            if sys.argv[arg_index] == '--help':
+        while True:
+            arg_index = arg_index + 1
+            if arg_index >= len(self.arguments):
                 break
 
-            if sys.argv[arg_index] == '--show-config':
-                try:
-                    current_locale = locale.getlocale()
-                    with open (os.path.expanduser("~/.j18/") + "config", "r", encoding='UTF8') as config_file:
-                        print(config_file.read())
-                except:
-                    print("Config file not found")
-                return
+            argument = self.arguments[arg_index]
 
-            if sys.argv[arg_index] == '--get-token':
-                if self.CommandGetToken() == False: return
-                return
-            
-            if sys.argv[arg_index] == '--get-repo-list':
-                if self.CommandGetRepoList() == False: return
-                return
+            if argument.lower() == "-skip-same-file":
+                self.skip_same_file = True
 
-            if sys.argv[arg_index] == '--filedetail':
-                if self.CommandFileDetail() == False: return
-                return
+            elif (option := __class__.GetArgOption(argument, "-r:")) != None:
+                if self.SetRepository(option) == False: return False
 
-            if sys.argv[arg_index] == '--download':
-                if self.CommandDownload() == False: return
-                return
+            elif (option := __class__.GetArgOption(argument, "-t:")) != None:
+                self.target = option
 
-            if sys.argv[arg_index] == '--ls':
-                if self.CommandLs() == False: return
-                return
+            elif (option := __class__.GetArgOption(argument, "-d:")) != None:
+                self.dest = os.path.expanduser(option)
+
+            elif (option := __class__.GetArgOption(argument, "-s:")) != None:
+                if self.SetServer(option) == False: return False
+
+            elif (option := __class__.GetArgOption(argument, "-c:")) != None:
+                if self.SetServerAndRepository(option) == False: return False
+            else:
+                continue
+
+            # 처리된 argument는 제거한다
+            del self.arguments[arg_index]
+            arg_index = arg_index - 1
+
+        return True
+
+    def Do(self):
+        # command argument를 찾는다
+        command:str = '--help'
+        for arg_index in range(1, len(self.arguments)):
+            argument = self.arguments[arg_index].lower()
+            if argument[:2] == '--':
+                command = argument
+                break
+
+        # 먼저 찾은 명령을 수행하고 끝낸다
+        if command == '--version': return self.CommandVersion()
+        if command == '--help': return self.CommandHelp()
+        if command == '--show-config': return self.ShowConfig()
+        if command == '--get-token': return self.CommandGetToken()
+        if command == '--get-repo-list': return self.CommandGetRepoList()
+        if command == '--filedetail': return self.CommandFileDetail()
+        if command == '--download': return self.CommandDownload()
+        if command == '--ls': return self.CommandLs()
         
-        print("j18 version " + Environment.version + " copyright(c) 2023. juno-studio all rights reserved.")
+        print('[ER] Unknown Command: ' + command)
+        return False
 
-        try:
-            current_locale = str(locale.getlocale()[0])
+    def GetArgOption(argument:str, option_head:str):
+        head = argument[:len(option_head)].lower()
+        if head != option_head: return None
 
-            # Windows에서는 locale 이름이 다르다
-            if current_locale == "Korean_Korea": current_locale = "ko_KR"
-
-            help_file_path = res_from("resource/help_" + current_locale + ".txt")
-            with open (help_file_path, "r", encoding='UTF8') as help_file:
-                print(help_file.read())
-        except:
-            with open (res_from("resource/help_en_US.txt"), "r", encoding='UTF8') as help_file:
-                print(help_file.read())
+        return argument[len(option_head):]
 
     def SetServer(self, argument:str):
         self.config.SetServer(argument)
@@ -193,6 +184,37 @@ class j18Main():
         
         self.seafile.SetRepositoryId(self.config.repos_id)
         return True
+
+    def CommandVersion(self):
+        print(Environment.version)
+        return True
+    
+    def CommandHelp(self):
+        print("j18 version " + Environment.version + " copyright(c) 2023. juno-studio all rights reserved.")
+
+        try:
+            current_locale = str(locale.getlocale()[0])
+
+            # Windows에서는 locale 이름이 다르다
+            if current_locale == "Korean_Korea": current_locale = "ko_KR"
+
+            help_file_path = res_from("resource/help_" + current_locale + ".txt")
+            with open (help_file_path, "r", encoding='UTF8') as help_file:
+                print(help_file.read())
+        except:
+            with open (res_from("resource/help_en_US.txt"), "r", encoding='UTF8') as help_file:
+                print(help_file.read())
+
+        return True
+
+    def ShowConfig(self):
+        try:
+            current_locale = locale.getlocale()
+            with open (os.path.expanduser("~/.j18/") + "config", "r", encoding='UTF8') as config_file:
+                print(config_file.read())
+        except:
+            print("Config file not found")
+        return True
     
     def CommandGetToken(self):
         if self.config.address == "":
@@ -208,7 +230,6 @@ class j18Main():
             return False
         
         print('token:' + token)
-
         return True
 
     def CommandGetRepoList(self):
@@ -235,7 +256,7 @@ class j18Main():
         items = self.seafile.GetListItemsInDirectory(self.target)
         if items == None:
             print(f"[ER] Get Item List (Target Directory={self.target})")
-            return
+            return False
         
         if len(items) != 0:
             for item in items:
@@ -244,6 +265,8 @@ class j18Main():
                 else:
                     print("[F] " + item.name)
 
+        return True
+
     def CommandFileDetail(self):
         info = self.seafile.GetFileDetail(self.target)
         if info != None:
@@ -251,15 +274,22 @@ class j18Main():
             print(" Last Modifier Name: " + info.last_modifier_name)
             print(" Last Modified: " + str(info.last_modified))
             print(" Size: " + str(info.size))
+            return True
         else:
             print("[ER] File not found : " + self.target)
+            return False
 
     def CommandDownload(self):
         progress = jSeaFileDownloadProgress(self.download_progress)
 
         if self.seafile.Download(self.target, self.dest, self.skip_same_file, progress):
             print("download success")
+            return True
         else:
             print("\n[ER] download failed")
+            return False
 
-if __name__ == "__main__": j18Main()
+if __name__ == "__main__":
+    main = j18Main()
+    if main.GetOptions() == True:
+        main.Do()

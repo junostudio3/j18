@@ -1,4 +1,4 @@
-# j18 v0.0.0.2
+# j18 v0.0.0.3
 - Prompt 에서 Seafile 클라우드에 명령을 내리기 위한 프로그램입니다.
 - 매크로 등을 사용하여 편리하게 자동화에 사용할 만한 프로그램을 개발하는게 목표입니다.
 
@@ -12,18 +12,19 @@
     j18 <command> [options]
     ```
 
-## option
-- [-s](option_s.md)
-- [-r](option_r.md)
-- [-c](option_c.md)
-- [-t](option_t.md)
-- [-d](option_d.md)
-- [-skip-same-file](option_skip-same-file.md)
-
 ## command
+- [--version](command_version.md)
 - [--show-config](command_show-config.md)
 - [--download](command_download.md)
 - [--get-token](command_get-token.md)
 - [--get-repo-list](command_get-repo-list.md)
 - [--filedetail](command_filedetail.md)
 - [--ls](command_ls.md)
+
+## options
+- [-s](option_s.md)
+- [-r](option_r.md)
+- [-c](option_c.md)
+- [-t](option_t.md)
+- [-d](option_d.md)
+- [-skip-same-file](option_skip-same-file.md)

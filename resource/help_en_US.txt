@@ -5,8 +5,9 @@ Usage:
   j18 <command> [options]
 
 Commands:
+  --version                   Show Version.
   --help                      Show help.
-  --show-config               Show Config file.
+  --show-config               Show config file.
   --get-token                 Get api token from seafile server.
   --get-repo-list             Get repository list from seafile server.
   --download                  Download remote file in seafile.
