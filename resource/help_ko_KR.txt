@@ -21,3 +21,4 @@ General Options:
   -t:{seafile_path}           seafile 내의 TARGET 경로를 지정합니다.
   -d:{local_path}             local 내의 경로를 지정합니다.
   -skip-same-file             이미 존재하는 같은 파일은 다운로드 시 스킵합니다.
+  -update-line-by-step        Step 별로 문자열을 갱신합니다.

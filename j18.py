@@ -19,6 +19,7 @@ class j18DownloadPorgress():
     def __init__(self):
         self.max_charector_count = 40
         self.pos = 0
+        self.updae_line_by_step = False
 
     def SetStartSummary(self, total_size):
         print("download total data size = " + str(total_size))
@@ -35,15 +36,21 @@ class j18DownloadPorgress():
         self.UpdatePos(pos)
         if old_progress == self.progress_pos: return    # 너무 자주 갱신하지 말자. 깜빡거려서 보기 안 좋을 수 있으므로 #
 
-        print('\r', end='')
+        if self.updae_line_by_step == False:
+            print('\r', end='')
+
         self.pos = pos
         self.__DisplayProgress()
 
     def End(self):
-        print('\r', end='')
+        if self.updae_line_by_step == False:
+            print('\r', end='')
+
         self.UpdatePos(self.total_size)
         self.__DisplayProgress()
-        print('')
+
+        if self.updae_line_by_step == False:
+            print('')
 
     def UpdatePos(self, pos):
         self.pos = pos
@@ -62,6 +69,8 @@ class j18DownloadPorgress():
 
         percent = self.pos * 100.00 / self.total_size
         print(f'] {percent:.2f}%% ({self.pos} / {self.total_size}) ' + self.file_name, end='')
+        if self.updae_line_by_step:
+            print('')
 
 class j18Main():
     def __init__(self):
@@ -86,6 +95,9 @@ class j18Main():
 
             if argument.lower() == "-skip-same-file":
                 self.skip_same_file = True
+
+            elif argument.lower() == "-update-line-by-step":
+                self.download_progress.updae_line_by_step = True
 
             elif (option := __class__.GetArgOption(argument, "-r:")) != None:
                 if self.SetRepository(option) == False: return False

@@ -21,3 +21,4 @@ General Options:
   -t:{seafile_path}           Set Target Path.
   -d:{local_path}             Set Destination Path.
   -skip-same-file             Skip the same file that already exists when downloading.
+  -update-line-by-step        Update line by step.
