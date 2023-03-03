@@ -1,6 +1,6 @@
 """
  blog: https://junostudio.tistory.com/
- git: https://github.com/sjh9763/j18
+ git: https://github.com/junostudio3/j18
  j18 config
 
 """

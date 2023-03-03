@@ -1,6 +1,6 @@
 """
  blog: https://junostudio.tistory.com/
- git: https://github.com/sjh9763/j18
+ git: https://github.com/junostudio3/j18
     Seafile Web API를 이용하여 파일을 다운 받거나 정보를 얻는 등의 작업을 하기 위한 클래스이다
     API Documents: https://download.seafile.com/published/web-api/home.md
 """
