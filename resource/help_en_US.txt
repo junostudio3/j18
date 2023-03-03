@@ -1,3 +1,6 @@
+blog: https://junostudio.tistory.com/
+git: https://github.com/sjh9763/j18
+
 Usage:   
   j18 <command> [options]
 
@@ -11,8 +14,9 @@ Commands:
   --filedetail                Get File Detail Infomation.
 
 General Options:
-  -s{server_name}            Read server address and api token from config file.
-  -r{repository_name}        Read repository id from config file.
-  -c{connect_name}           Read server name and repository name from config file. Then apply server and repository information.
-  -t{seafile_path}           Set Target Path.
-  -d{local_path}             Set Destination Path.
+  -s:{server_name}            Read server address and api token from config file.
+  -r:{repository_name}        Read repository id from config file.
+  -c:{connect_name}           Read server name and repository name from config file. Then apply server and repository information.
+  -t:{seafile_path}           Set Target Path.
+  -d:{local_path}             Set Destination Path.
+  -skip-same-file             Skip the same file that already exists when downloading.
