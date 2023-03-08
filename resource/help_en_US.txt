@@ -12,7 +12,8 @@ Commands:
   --get-repo-list             Get repository list from seafile server.
   --download                  Download remote file in seafile.
   --ls                        Get sub item list from seafile server target directory.
-  --filedetail                Get File Detail Infomation.
+  --filedetail                Get file detail infomation.
+  --validate                  Validate connection information.
 
 General Options:
   -s:{server_name}            Read server address and api token from config file.
