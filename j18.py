@@ -90,7 +90,7 @@ class j18Main():
 
     def GetOptions(self):
         # 실행 환경 관련 인자를 먼저 불러온다
-        arg_index = -1
+        arg_index = 0
 
         while True:
             arg_index = arg_index + 1
@@ -98,6 +98,10 @@ class j18Main():
                 break
 
             argument = self.arguments[arg_index]
+
+            if argument[:2] == '--':
+                # 명령을 일단 넘어가자
+                continue
 
             if argument.lower() == "-skip-same-file":
                 self.skip_same_file = True
@@ -120,7 +124,8 @@ class j18Main():
             elif (option := __class__.GetArgOption(argument, "-c:")) != None:
                 if self.SetServerAndRepository(option) == False: return False
             else:
-                continue
+                print('[ER] Unknown option: ' + argument)
+                return False
 
             # 처리된 argument는 제거한다
             del self.arguments[arg_index]
@@ -335,4 +340,4 @@ if __name__ == "__main__":
     main = j18Main()
     if main.GetOptions() == True:
         if main.Do() == error_code.command_failed:
-            main.CommandValidCheck(False)
+            main.CommandValidate(False)
