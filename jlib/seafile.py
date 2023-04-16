@@ -106,6 +106,19 @@ class jSeaFile:
         if self.GetFileDetail(file_path) == None: return False
         return True
     
+    def CreateDirectory(self, path:str):
+        text = self.__GetResponseUsingToken(
+            '/api2/repos/' + self.repo_id + '/dir/',
+            {'p':path}, 'operation=mkdir')
+
+        if text == None: return None
+
+        try:
+            return text == 'success'
+
+        except:
+            return False
+
     def Download(self, seafile_path:str, output_folder_path:str, skip_same_file:bool, progress:jSeaFileDownloadProgress = None):
         master_path_is_file = True
 
@@ -342,7 +355,7 @@ class jSeaFile:
         file_name_start = file_name_start + 1
         return path[file_name_start:]
 
-    def __GetResponseUsingToken(self, relative_url:str, parameters:dict[str,str] = None):
+    def __GetResponseUsingToken(self, relative_url:str, parameters:dict[str,str] = None, post:str = None):
         url_address = self.url + relative_url
         if parameters != None:
             first = True
@@ -356,7 +369,8 @@ class jSeaFile:
                 first = False
 
         try:
-            url = urllib.request.Request(url_address)
+            if post != None: post = post.encode('utf-8')
+            url = urllib.request.Request(url_address, post)
             url.add_header("Authorization", "Token " + self.api_token)
             url.add_header("Accept", "application/json; charset=utf-8 indent=4")
             connection:urllib.request._UrlopenRet = urllib.request.urlopen(url)
@@ -365,8 +379,8 @@ class jSeaFile:
         except Exception as e:
             return None
 
-    def __GetResponseJsonUsingToken(self, relative_url:str, parameters:dict[str, str] = None):
-        text = self.__GetResponseUsingToken(relative_url, parameters)
+    def __GetResponseJsonUsingToken(self, relative_url:str, parameters:dict[str, str] = None, post:str = None):
+        text = self.__GetResponseUsingToken(relative_url, parameters, post)
         if text == None: return None
 
         try:

@@ -10,6 +10,7 @@ Commands:
   --show-config               config 파일 내용을 출력합니다.
   --get-token                 seafile 서버에서 API TOKEN을 얻습니다.
   --get-repo-list             seafile 서버내의 저장소 리스트를 얻습니다.
+  --mkdir                     seafile 서버에 TARGET 경로의 폴더를 만듭니다.
   --download                  seafile 서버에서 파일을 다운받습니다.
   --ls                        seafile 서버의 TARGET 아래의 하위 목록을 확인합니다.
   --filedetail                seafile 서버의 TARGET (파일)의 상세 정보를 얻습니다.

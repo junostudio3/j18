@@ -10,6 +10,7 @@ Commands:
   --show-config               Show config file.
   --get-token                 Get api token from seafile server.
   --get-repo-list             Get repository list from seafile server.
+  --mkdir                     Create Directory
   --download                  Download remote file in seafile.
   --ls                        Get sub item list from seafile server target directory.
   --filedetail                Get file detail infomation.

@@ -150,6 +150,7 @@ class j18Main():
         if command == '--get-repo-list': return self.CommandGetRepoList()
         if command == '--filedetail': return self.CommandFileDetail()
         if command == '--download': return self.CommandDownload()
+        if command == '--mkdir': return self.CommandCreateDirectory()
         if command == '--ls': return self.CommandLs()
         if command == '--validate': return self.CommandValidate()
         
@@ -296,6 +297,15 @@ class j18Main():
             return error_code.success
         else:
             print("[error:xxxx] File not found : " + self.target)
+            return error_code.command_failed
+
+    def CommandCreateDirectory(self):
+        success = self.seafile.CreateDirectory(self.target)
+        if success:
+            print("Success")
+            return error_code.success
+        else:
+            print("[error:xxxx] Failed to Create Directory : " + self.target)
             return error_code.command_failed
 
     def CommandDownload(self):
