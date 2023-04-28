@@ -14,6 +14,7 @@ Commands:
   --download                  Download remote file in seafile.
   --ls                        Get sub item list from seafile server target directory.
   --filedetail                Get file detail infomation.
+  --upload                    Upload local file to seafile folder.
   --validate                  Validate connection information.
 
 General Options:

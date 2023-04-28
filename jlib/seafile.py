@@ -9,16 +9,19 @@ from datetime import datetime, timedelta, timezone
 import time
 import os
 import json
+
+from requests_toolbelt import MultipartEncoder, MultipartEncoderMonitor
+import requests
 import urllib.request
 import urllib.parse
 
-class jSeaFileDownloadProgress:
+class jSeaFileProgress:
     def __init__(self, target):
         self.target = target
         self.first_run = True
 
-    def SetStartSummary(self, total_size):
-        self.target.SetStartSummary(total_size)
+    def SetStartSummary(self, is_download:bool, total_size):
+        self.target.SetStartSummary(is_download, total_size)
 
     def Init(self, file_name):
         self.first_run = True
@@ -34,6 +37,18 @@ class jSeaFileDownloadProgress:
 
     def End(self):
         self.target.End()
+
+class jSeafileUploadMonitor:
+    def __init__(self, progress:jSeaFileProgress, file_path:str):
+        self.progress = progress
+        self.total_size = os.path.getsize(file_path)
+
+        if progress != None:
+            progress.SetStartSummary(True, self.total_size)
+            progress.Init(os.path.basename(file_path))
+
+    def callback(self, monitor:MultipartEncoderMonitor):
+        self.progress.Doing(1, monitor.bytes_read, self.total_size)
 
 class jSeaRepositoryInfo:
     def __init__(self):
@@ -119,7 +134,7 @@ class jSeaFile:
         except:
             return False
 
-    def Download(self, seafile_path:str, output_folder_path:str, skip_same_file:bool, progress:jSeaFileDownloadProgress = None):
+    def Download(self, seafile_path:str, output_folder_path:str, skip_same_file:bool, progress:jSeaFileProgress = None):
         master_path_is_file = True
 
         if self.IsExistDirectory(seafile_path):
@@ -181,7 +196,7 @@ class jSeaFile:
         for item in download_items:
             total_size += item.size
 
-        if progress != None: progress.SetStartSummary(total_size)
+        if progress != None: progress.SetStartSummary(True, total_size)
 
         for item in download_items:
             if master_path_is_file:
@@ -326,6 +341,28 @@ class jSeaFile:
             return None
 
         return items
+
+    def GetUploadFileLink(self, path:str):
+        text = self.__GetResponseUsingToken("/api2/repos/" + self.repo_id + '/upload-link/', {'p':path})
+        if text == None: return ""
+        return text
+    
+    def UploadFile(seafile_upload_file_link:str, seafile_folder:str, file_path:str, progress:jSeaFileProgress = None):
+        # Multipart/form-data format으로 전달해야 함
+
+        try:
+            e = MultipartEncoder(fields={
+                    'parent_dir':seafile_folder,
+                    'file':(os.path.basename(file_path), open(file_path, 'rb')),
+                    'replace':'1'
+                })
+            
+            callback_class = jSeafileUploadMonitor(progress, file_path)
+            m = MultipartEncoderMonitor(e, callback_class.callback)
+            requests.post(seafile_upload_file_link, data = m, headers={'Content-Type':m.content_type})
+            return True
+        except:
+            return False
 
     def AuthPing(self):
         text = self.__GetResponseUsingToken('/api2/auth/ping/')
