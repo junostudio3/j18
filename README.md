@@ -7,7 +7,7 @@
 
 ## 설치
 - 다음의 라이브러리의 설치가 필요하다 (Apache Software License 2.0)
-- pip3 insall requests
+- pip3 install requests
 - pip3 install requests_toolbelt
 
 ## PyInstaller 를 이용하여 직접 실행파일 만드는 법
