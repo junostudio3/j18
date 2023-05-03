@@ -13,6 +13,7 @@ from getpass import getpass
 
 from jlib.seafile import jSeaFile, jSeaFileProgress
 from j18config import j18Config
+from console import Console
 from environment import Environment
 from res import res_from
 
@@ -21,7 +22,7 @@ class error_code(Enum):
     valid_failed = 1,
     command_failed = 2,
 
-class ConsolePorgress():
+class ConsolePorgress:
     def __init__(self):
         self.max_charector_count = 40
         self.pos = 0
@@ -29,9 +30,9 @@ class ConsolePorgress():
 
     def SetStartSummary(self, is_download:bool, total_size):
         if is_download:
-            print("download total data size = " + str(total_size))
+            Console.PrintLn("download total data size = " + str(total_size))
         else:
-            print("upload total data size = " + str(total_size))
+            Console.PrintLn("upload total data size = " + str(total_size))
 
     def Start(self, file_name, total_size):
         self.total_size = total_size
@@ -46,20 +47,20 @@ class ConsolePorgress():
         if old_progress == self.progress_pos: return    # 너무 자주 갱신하지 말자. 깜빡거려서 보기 안 좋을 수 있으므로 #
 
         if self.update_line_by_step == False:
-            print('\r', end='')
+            Console.Print('\r')
 
         self.pos = pos
         self.__DisplayProgress()
 
     def End(self):
         if self.update_line_by_step == False:
-            print('\r', end='')
+            Console.Print('\r')
 
         self.UpdatePos(self.total_size)
         self.__DisplayProgress()
 
         if self.update_line_by_step == False:
-            print('')
+            Console.PrintLn()
 
     def UpdatePos(self, pos):
         self.pos = pos
@@ -68,20 +69,20 @@ class ConsolePorgress():
             self.progress_pos = int(self.pos * self.max_charector_count / self.total_size)
 
     def __DisplayProgress(self):
-        print('[', end='')
+        Console.Print('[')
 
         for i in range(self.max_charector_count):
             if i < self.progress_pos:
-                print('=', end='')
+                Console.Print('=')
             else:
-                print(' ', end='')
+                Console.Print(' ')
 
         percent = self.pos * 100.00 / self.total_size
-        print(f'] {percent:.2f}%% ({self.pos} / {self.total_size}) ' + self.file_name, end='')
+        Console.Print(f'] {percent:.2f}%% ({self.pos} / {self.total_size}) ' + self.file_name)
         if self.update_line_by_step:
-            print('')
+            Console.PrintLn()
 
-class j18Main():
+class j18Main:
     def __init__(self):
         self.console_progress = ConsolePorgress()
         self.seafile = jSeaFile()
@@ -127,7 +128,7 @@ class j18Main():
             elif (option := __class__.GetArgOption(argument, "-c:")) != None:
                 if self.SetServerAndRepository(option) == False: return False
             else:
-                print('[ER] Unknown option: ' + argument)
+                Console.PrintLn('[ER] Unknown option: ' + argument)
                 return False
 
             # 처리된 argument는 제거한다
@@ -158,7 +159,7 @@ class j18Main():
         if command == '--upload': return self.CommandUpload()
         if command == '--validate': return self.CommandValidate()
         
-        print('[ER] Unknown Command: ' + command)
+        Console.PrintLn('[ER] Unknown Command: ' + command)
         return error_code.valid_failed
 
     def GetArgOption(argument:str, option_head:str):
@@ -170,14 +171,14 @@ class j18Main():
     def SetServer(self, argument:str):
         self.config.SetServer(argument)
         if self.config.address == '':
-            print('[error:0004] Unknown Server Name: ' + argument)
+            Console.PrintLn('[error:0004] Unknown Server Name: ' + argument)
             return False
         
         self.seafile.SetAddress(self.config.address)
         self.seafile.SetApiToken(self.config.token)
 
         if self.config.address == '':
-            print('[ER] Addess is empty: ')
+            Console.PrintLn('[ER] Addess is empty: ')
             return False
         
         return True
@@ -185,7 +186,7 @@ class j18Main():
     def SetRepository(self, argument:str):
         self.config.SetRepository(argument)
         if self.config.repos_id == '':
-            print('[error:0005] Unknown Repository Name: ' + argument)
+            Console.PrintLn('[error:0005] Unknown Repository Name: ' + argument)
             return False
         
         self.seafile.SetRepositoryId(self.config.repos_id)
@@ -194,31 +195,31 @@ class j18Main():
     def SetServerAndRepository(self, argument:str):
         self.config.SetServerAndRepository(argument)
         if self.config.address == '':
-            print('[error:xxxx] --c{ConnectionName}')
-            print('[error:xxxx] Unknown Connection Name: ' + argument)
+            Console.PrintLn('[error:xxxx] --c{ConnectionName}')
+            Console.PrintLn('[error:xxxx] Unknown Connection Name: ' + argument)
             return False
         
         self.seafile.SetAddress(self.config.address)
         self.seafile.SetApiToken(self.config.token)
 
         if self.config.address == '':
-            print('[error:xxxx] Addess is empty: ')
+            Console.PrintLn('[error:xxxx] Addess is empty: ')
             return False
         
         if self.config.repos_id == '':
-            print('[error:xxxx] Repository ID is empty: ')
+            Console.PrintLn('[error:xxxx] Repository ID is empty: ')
             return False
         
         self.seafile.SetRepositoryId(self.config.repos_id)
         return True
 
     def CommandVersion(self):
-        print(Environment.version)
+        Console.PrintLn(Environment.version)
         return error_code.success
     
     def CommandHelp(self):
-        print('j18 version ' + Environment.version + ' copyright(c) 2023. juno-studio all rights reserved.')
-        print()
+        Console.PrintLn('j18 version ' + Environment.version + ' copyright(c) 2023. juno-studio all rights reserved.')
+        Console.PrintLn()
 
         try:
             current_locale = str(locale.getlocale()[0])
@@ -228,10 +229,10 @@ class j18Main():
 
             help_file_path = res_from("resource/help_" + current_locale + ".txt")
             with open (help_file_path, "r", encoding='UTF8') as help_file:
-                print(help_file.read())
+                Console.PrintLn(help_file.read())
         except:
             with open (res_from("resource/help_en_US.txt"), "r", encoding='UTF8') as help_file:
-                print(help_file.read())
+                Console.PrintLn(help_file.read())
 
         return error_code.success
 
@@ -239,113 +240,113 @@ class j18Main():
         try:
             current_locale = locale.getlocale()
             with open (os.path.expanduser("~/.j18/") + "config", "r", encoding='UTF8') as config_file:
-                print(config_file.read())
+                Console.PrintLn(config_file.read())
         except:
-            print("Config file not found")
+            Console.PrintLn("Config file not found")
         return error_code.success
     
     def CommandGetToken(self):
         if self.config.address == "":
-            print('[error:xxxx] The following options are required.')
-            print('[error:xxxx] option: --s{ServerName}')
+            Console.PrintLn('[error:xxxx] The following options are required.')
+            Console.PrintLn('[error:xxxx] option: --s{ServerName}')
             return error_code.valid_failed
         
         user_name = input("user_name:")
         password = getpass("password:")
         token = self.seafile.GetApiToken(user_name, password)
         if token == "":
-            print('[error:xxxx] get-token failed')
+            Console.PrintLn('[error:xxxx] get-token failed')
             return error_code.command_failed
         
-        print('token:' + token)
+        Console.PrintLn('token:' + token)
         return error_code.success
 
     def CommandGetRepoList(self):
         if self.config.address == "":
-            print('[error:xxxx] The following options are required.')
-            print('[error:xxxx] option: --s{ServerName}')
+            Console.PrintLn('[error:xxxx] The following options are required.')
+            Console.PrintLn('[error:xxxx] option: --s{ServerName}')
             return error_code.valid_failed
         
         items = self.seafile.GetRepositoryList()
         if items == None:
-            print("[error:xxxx] Get Repository List Failed")
+            Console.PrintLn("[error:xxxx] Get Repository List Failed")
             return error_code.command_failed
         
         for item in items:
-            print(item.name + "(" + item.permission + ") -> " + item.id)
+            Console.PrintLn(item.name + "(" + item.permission + ") -> " + item.id)
 
         return error_code.success
     
     def CommandLs(self):
         items = self.seafile.GetListItemsInDirectory(self.target)
         if items == None:
-            print(f"[error:xxxx] Get Item List (Target Directory={self.target})")
+            Console.PrintLn(f"[error:xxxx] Get Item List (Target Directory={self.target})")
             return error_code.command_failed
         
         if len(items) != 0:
             for item in items:
                 if item.is_directory:
-                    print("[D] " + item.name)
+                    Console.PrintLn("[D] " + item.name)
                 else:
-                    print("[F] " + item.name + " (" + str(item.size) + " bytes)")
+                    Console.PrintLn("[F] " + item.name + " (" + str(item.size) + " bytes)")
 
         return error_code.success
 
     def CommandFileDetail(self):
         info = self.seafile.GetFileDetail(self.target)
         if info != None:
-            print(" ID: " + info.id)
-            print(" Last Modifier Name: " + info.last_modifier_name)
-            print(" Last Modified: " + str(info.last_modified))
-            print(" Size: " + str(info.size))
+            Console.PrintLn(" ID: " + info.id)
+            Console.PrintLn(" Last Modifier Name: " + info.last_modifier_name)
+            Console.PrintLn(" Last Modified: " + str(info.last_modified))
+            Console.PrintLn(" Size: " + str(info.size))
             return error_code.success
         else:
-            print("[error:xxxx] File not found : " + self.target)
+            Console.PrintLn("[error:xxxx] File not found : " + self.target)
             return error_code.command_failed
 
     def CommandCreateDirectory(self):
         success = self.seafile.CreateDirectory(self.target)
         if success:
-            print("Success")
+            Console.PrintLn("Success")
             return error_code.success
         else:
-            print("[error:xxxx] Failed to Create Directory : " + self.target)
+            Console.PrintLn("[error:xxxx] Failed to Create Directory : " + self.target)
             return error_code.command_failed
 
     def CommandDownload(self):
         progress = jSeaFileProgress(self.console_progress)
 
         if self.seafile.Download(self.target, self.dest, self.skip_same_file, progress):
-            print("download success")
+            Console.PrintLn("download success")
             return error_code.success
         else:
-            print("\n[error:xxxx] download failed")
+            Console.PrintLn("\n[error:xxxx] download failed")
             return error_code.command_failed
 
     def CommandUpload(self):
         link:str = self.seafile.GetUploadFileLink(self.target)
         if link == None:
-            print("[error:xxxx] get upload file link failed")
+            Console.PrintLn("[error:xxxx] get upload file link failed")
             return error_code.command_failed        
 
         progress = jSeaFileProgress(self.console_progress)
 
         if jSeaFile.UploadFile(link, self.target, self.dest, progress):
-            print("upload success")
+            Console.PrintLn("upload success")
             return error_code.success
         else:
-            print("\n[error:xxxx] upload failed")
+            Console.PrintLn("\n[error:xxxx] upload failed")
             return error_code.command_failed        
 
     def CommandValidate(self, show_success_message = True):
         if self.seafile.CheckAddress() == False:
-            print('[error:0001] Connect Failed (Check Address:' + self.config.address + ')')
+            Console.PrintLn('[error:0001] Connect Failed (Check Address:' + self.config.address + ')')
             return error_code.valid_failed
         
         if self.config.token != '':
             # Token이 세팅되어 있으니 Token 문제 없나 체크
             if self.seafile.CheckToken() == False:
-                print('[error:0002] Permission declined (Check Token:' + self.config.token + ')')
+                Console.PrintLn('[error:0002] Permission declined (Check Token:' + self.config.token + ')')
                 return error_code.valid_failed
             
             # Repos가 세팅되어 있으니 Repos 체크
@@ -357,11 +358,11 @@ class j18Main():
                         break
                 
                 if found == False:
-                    print('[error:0003] Repos not found (Check Repos:' + self.config.repos_id + ')')
+                    Console.PrintLn('[error:0003] Repos not found (Check Repos:' + self.config.repos_id + ')')
                     return error_code.valid_failed
                 
         if show_success_message:
-            print("OK")
+            Console.PrintLn("OK")
         
         return error_code.success
 
