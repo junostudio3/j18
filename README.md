@@ -7,7 +7,7 @@
 
 ## 설치
 - 다음의 라이브러리의 설치가 필요하다 (Apache Software License 2.0)
-- pip3 insall requests
+- pip3 install requests
 - pip3 install requests_toolbelt
 
 ## 기타사항
