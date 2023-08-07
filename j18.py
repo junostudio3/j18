@@ -8,13 +8,11 @@
 from enum import Enum
 import locale
 import os
-import sys
 from getpass import getpass
 
 from jconsole.parser import jConsoleParser, jConsoleParseResult, jConsoleCheckOptionResult, jConsoleOption
 from jlib.seafile import jSeaFile, jSeaFileProgress
 from j18config import j18Config
-from console import Console
 from environment import Environment
 from res import res_from
 
@@ -35,9 +33,9 @@ class ConsolePorgress:
 
     def SetStartSummary(self, is_download:bool, total_size):
         if is_download:
-            Console.PrintLn("download total data size = " + str(total_size))
+            jConsoleParser.PrintLn("download total data size = " + str(total_size))
         else:
-            Console.PrintLn("upload total data size = " + str(total_size))
+            jConsoleParser.PrintLn("upload total data size = " + str(total_size))
 
     def Start(self, file_name, total_size):
         self.total_size = total_size
@@ -52,20 +50,20 @@ class ConsolePorgress:
         if old_progress == self.progress_pos: return    # 너무 자주 갱신하지 말자. 깜빡거려서 보기 안 좋을 수 있으므로 #
 
         if self.update_line_by_step == False:
-            Console.Print('\r')
+            jConsoleParser.Print('\r')
 
         self.pos = pos
         self.__DisplayProgress()
 
     def End(self):
         if self.update_line_by_step == False:
-            Console.Print('\r')
+            jConsoleParser.Print('\r')
 
         self.UpdatePos(self.total_size)
         self.__DisplayProgress()
 
         if self.update_line_by_step == False:
-            Console.PrintLn()
+            jConsoleParser.PrintLn()
 
     def UpdatePos(self, pos):
         self.pos = pos
@@ -74,18 +72,18 @@ class ConsolePorgress:
             self.progress_pos = int(self.pos * self.max_charector_count / self.total_size)
 
     def __DisplayProgress(self):
-        Console.Print('[')
+        jConsoleParser.Print('[')
 
         for i in range(self.max_charector_count):
             if i < self.progress_pos:
-                Console.Print('=')
+                jConsoleParser.Print('=')
             else:
-                Console.Print(' ')
+                jConsoleParser.Print(' ')
 
         percent = self.pos * 100.00 / self.total_size
-        Console.Print(f'] {percent:.2f}%% ({self.pos} / {self.total_size}) ' + self.file_name)
+        jConsoleParser.Print(f'] {percent:.2f}%% ({self.pos} / {self.total_size}) ' + self.file_name)
         if self.update_line_by_step:
-            Console.PrintLn()
+            jConsoleParser.PrintLn()
 
 class j18Main (jConsoleParser) :
     def __init__(self):
@@ -96,7 +94,6 @@ class j18Main (jConsoleParser) :
         self.target = "/"
         self.dest = os.getcwd()
         self.skip_same_file = False
-        self.arguments = sys.argv
         self.AddCommandLink('--help', self.__CommandHelp)
         self.AddCommandLink('--version', self.__CommandVersion)
         self.AddCommandLink('--show-config', self.__CommandShowConfig)
@@ -141,8 +138,8 @@ class j18Main (jConsoleParser) :
         return False
     
     def __CommandHelp(self):
-        Console.PrintLn('j18 version ' + Environment.version + ' copyright(c) 2023. juno-studio all rights reserved.')
-        Console.PrintLn()
+        jConsoleParser.PrintLn('j18 version ' + Environment.version + ' copyright(c) 2023. juno-studio all rights reserved.')
+        jConsoleParser.PrintLn()
 
         try:
             current_locale = str(locale.getlocale()[0])
@@ -152,128 +149,129 @@ class j18Main (jConsoleParser) :
 
             help_file_path = res_from("resource/help_" + current_locale + ".txt")
             with open (help_file_path, "r", encoding='UTF8') as help_file:
-                Console.PrintLn(help_file.read())
+                jConsoleParser.PrintLn(help_file.read())
         except:
             with open (res_from("resource/help_en_US.txt"), "r", encoding='UTF8') as help_file:
-                Console.PrintLn(help_file.read())
+                jConsoleParser.PrintLn(help_file.read())
 
         return error_code.success
 
     def __CommandVersion(self):
-        Console.PrintLn(Environment.version)
+        jConsoleParser.PrintLn(Environment.version)
         return error_code.success
     
     def __CommandShowConfig(self):
         try:
             current_locale = locale.getlocale()
             with open (os.path.expanduser("~/.j18/") + "config", "r", encoding='UTF8') as config_file:
-                Console.PrintLn(config_file.read())
+                jConsoleParser.PrintLn(config_file.read())
         except:
-            Console.PrintLn("Config file not found")
+            jConsoleParser.PrintLn("Config file not found")
         return error_code.success
     
     def __CommandGetToken(self):
         if self.config.address == "":
-            Console.PrintLn('[error:xxxx] The following options are required.')
-            Console.PrintLn('[error:xxxx] option: --s{ServerName}')
+            jConsoleParser.PrintErrorLn(-1, 'The following options are required.')
+            jConsoleParser.PrintErrorLn(-1, 'option: --s{ServerName}')
             return error_code.valid_failed
         
         user_name = input("user_name:")
         password = getpass("password:")
         token = self.seafile.GetApiToken(user_name, password)
         if token == "":
-            Console.PrintLn('[error:xxxx] get-token failed')
+            jConsoleParser.PrintErrorLn(-1, 'get-token failed')
             return error_code.command_failed
         
-        Console.PrintLn('token:' + token)
+        jConsoleParser.PrintLn('token:' + token)
         return error_code.success
     
     def __CommandGetRepoList(self):
         if self.config.address == "":
-            Console.PrintLn('[error:xxxx] The following options are required.')
-            Console.PrintLn('[error:xxxx] option: --s{ServerName}')
+            jConsoleParser.PrintLn('[error:xxxx] The following options are required.')
+            jConsoleParser.PrintLn('[error:xxxx] option: --s{ServerName}')
             return error_code.valid_failed
         
         items = self.seafile.GetRepositoryList()
         if items == None:
-            Console.PrintLn("[error:xxxx] Get Repository List Failed")
+            jConsoleParser.PrintErrorLn(-1, 'Get Repository List Failed')
             return error_code.command_failed
         
         for item in items:
-            Console.PrintLn(item.name + "(" + item.permission + ") -> " + item.id)
+            jConsoleParser.PrintLn(item.name + "(" + item.permission + ") -> " + item.id)
 
         return error_code.success
 
     def __CommandFileDetail(self):
         info = self.seafile.GetFileDetail(self.target)
         if info != None:
-            Console.PrintLn(" ID: " + info.id)
-            Console.PrintLn(" Last Modifier Name: " + info.last_modifier_name)
-            Console.PrintLn(" Last Modified: " + str(info.last_modified))
-            Console.PrintLn(" Size: " + str(info.size))
+            jConsoleParser.PrintLn(" ID: " + info.id)
+            jConsoleParser.PrintLn(" Last Modifier Name: " + info.last_modifier_name)
+            jConsoleParser.PrintLn(" Last Modified: " + str(info.last_modified))
+            jConsoleParser.PrintLn(" Size: " + str(info.size))
             return error_code.success
         else:
-            Console.PrintLn("[error:xxxx] File not found : " + self.target)
+            jConsoleParser.PrintErrorLn(-1, 'File not found : ' + self.target)
             return error_code.command_failed
 
     def __CommandDownload(self):
         progress = jSeaFileProgress(self.console_progress)
 
         if self.seafile.Download(self.target, self.dest, self.skip_same_file, progress):
-            Console.PrintLn("download success")
+            jConsoleParser.PrintLn("download success")
             return error_code.success
         else:
-            Console.PrintLn("\n[error:xxxx] download failed")
+            jConsoleParser.PrintLn("\n[error:xxxx] download failed")
             return error_code.command_failed
 
     def __CommandCreateDirectory(self):
         success = self.seafile.CreateDirectory(self.target)
         if success:
-            Console.PrintLn("Success")
+            jConsoleParser.PrintLn("Success")
             return error_code.success
         else:
-            Console.PrintLn("[error:xxxx] Failed to Create Directory : " + self.target)
+            jConsoleParser.PrintErrorLn(-1, 'Failed to Create Directory : ' + self.target)
             return error_code.command_failed
 
     def __CommandLs(self):
         items = self.seafile.GetListItemsInDirectory(self.target)
         if items == None:
-            Console.PrintLn(f"[error:xxxx] Get Item List (Target Directory={self.target})")
+            jConsoleParser.PrintLn(f"[error:xxxx] Get Item List (Target Directory={self.target})")
             return error_code.command_failed
         
         if len(items) != 0:
             for item in items:
                 if item.is_directory:
-                    Console.PrintLn("[D] " + item.name)
+                    jConsoleParser.PrintLn("[D] " + item.name)
                 else:
-                    Console.PrintLn("[F] " + item.name + " (" + str(item.size) + " bytes)")
+                    jConsoleParser.PrintLn("[F] " + item.name + " (" + str(item.size) + " bytes)")
 
         return error_code.success
 
     def __CommandUpload(self):
         link:str = self.seafile.GetUploadFileLink(self.target)
         if link == None:
-            Console.PrintLn("[error:xxxx] get upload file link failed")
+            jConsoleParser.PrintErrorLn(-1, 'get upload file link failed')
             return error_code.command_failed        
 
         progress = jSeaFileProgress(self.console_progress)
 
         if jSeaFile.UploadFile(link, self.target, self.dest, progress):
-            Console.PrintLn("upload success")
+            jConsoleParser.PrintLn("upload success")
             return error_code.success
         else:
-            Console.PrintLn("\n[error:xxxx] upload failed")
+            jConsoleParser.PrintLn()
+            jConsoleParser.PrintErrorLn(-1, 'upload failed');
             return error_code.command_failed        
 
     def CommandValidate(self, show_success_message = True):
         if self.seafile.CheckAddress() == False:
-            Console.PrintLn('[error:0001] Connect Failed (Check Address:' + self.config.address + ')')
+            jConsoleParser.PrintErrorLn(1, 'Connect Failed (Check Address:' + self.config.address + ')')
             return error_code.valid_failed
         
         if self.config.token != '':
             # Token이 세팅되어 있으니 Token 문제 없나 체크
             if self.seafile.CheckToken() == False:
-                Console.PrintLn('[error:0002] Permission declined (Check Token:' + self.config.token + ')')
+                jConsoleParser.PrintErrorLn(2, 'Permission declined (Check Token:' + self.config.token + ')')
                 return error_code.valid_failed
             
             # Repos가 세팅되어 있으니 Repos 체크
@@ -285,11 +283,11 @@ class j18Main (jConsoleParser) :
                         break
                 
                 if found == False:
-                    Console.PrintLn('[error:0003] Repos not found (Check Repos:' + self.config.repos_id + ')')
+                    jConsoleParser.PrintErrorLn(3, 'Repos not found (Check Repos:' + self.config.repos_id + ')')
                     return error_code.valid_failed
                 
         if show_success_message:
-            Console.PrintLn("OK")
+            jConsoleParser.PrintLn("OK")
         
         return error_code.success
     
@@ -326,14 +324,14 @@ class j18Main (jConsoleParser) :
     def _SetServer(self, argument:str):
         self.config.SetServer(argument)
         if self.config.address == '':
-            Console.PrintLn('[error:0004] Unknown Server Name: ' + argument)
+            jConsoleParser.PrintLn('[error:0004] Unknown Server Name: ' + argument)
             return False
         
         self.seafile.SetAddress(self.config.address)
         self.seafile.SetApiToken(self.config.token)
 
         if self.config.address == '':
-            Console.PrintLn('[ER] Addess is empty: ')
+            jConsoleParser.PrintLn('[ER] Addess is empty: ')
             return False
         
         return True
@@ -341,7 +339,7 @@ class j18Main (jConsoleParser) :
     def _SetRepository(self, argument:str):
         self.config.SetRepository(argument)
         if self.config.repos_id == '':
-            Console.PrintLn('[error:0005] Unknown Repository Name: ' + argument)
+            jConsoleParser.PrintLn('[error:0005] Unknown Repository Name: ' + argument)
             return False
         
         self.seafile.SetRepositoryId(self.config.repos_id)
@@ -350,19 +348,19 @@ class j18Main (jConsoleParser) :
     def _SetServerAndRepository(self, argument:str):
         self.config.SetServerAndRepository(argument)
         if self.config.address == '':
-            Console.PrintLn('[error:xxxx] --c{ConnectionName}')
-            Console.PrintLn('[error:xxxx] Unknown Connection Name: ' + argument)
+            jConsoleParser.PrintLn('[error:xxxx] --c{ConnectionName}')
+            jConsoleParser.PrintLn('[error:xxxx] Unknown Connection Name: ' + argument)
             return False
         
         self.seafile.SetAddress(self.config.address)
         self.seafile.SetApiToken(self.config.token)
 
         if self.config.address == '':
-            Console.PrintLn('[error:xxxx] Addess is empty: ')
+            jConsoleParser.PrintLn('[error:xxxx] Addess is empty: ')
             return False
         
         if self.config.repos_id == '':
-            Console.PrintLn('[error:xxxx] Repository ID is empty: ')
+            jConsoleParser.PrintLn('[error:xxxx] Repository ID is empty: ')
             return False
         
         self.seafile.SetRepositoryId(self.config.repos_id)

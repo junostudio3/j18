@@ -10,6 +10,10 @@
 - pip3 install requests
 - pip3 install requests_toolbelt
 
+## 기타사항
+- jconsole library 의 Woker.py 사용 (console 출력)
+- git: https://github.com/junostudio3/jconsole
+
 ## PyInstaller 를 이용하여 직접 실행파일 만드는 법
 - Linux or Mac
     ```
