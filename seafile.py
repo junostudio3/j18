@@ -130,7 +130,7 @@ class jSeaFile:
             return False
 
         return True
-    
+
     def CreateDirectory(self, path: str):
         text = self.__GetResponseUsingToken(
             '/api2/repos/' + self.repo_id + '/dir/',
@@ -157,13 +157,13 @@ class jSeaFile:
 
             try:
                 os.mkdir(output_folder_path)
-            except:
+            except Exception:
                 pass
 
         download_items: list[jSeaFileItem] = self.GetSubItemAll(seafile_path)
         if download_items is None:
             return False
-        
+
         if skip_same_file:
             item_index = -1
             while True:
@@ -197,7 +197,7 @@ class jSeaFile:
                         # 파일과 같은 디렉토리가 있다.
                         # 이러면 다운로드가 불가능하다
                         return False
-                    
+
                     if os.path.getsize(out_path) != item.size:
                         continue
                     if datetime.fromtimestamp(os.path.getmtime(out_path)) != item.last_modified:
@@ -368,17 +368,17 @@ class jSeaFile:
         if text is None:
             return ""
         return text
-    
+
     def UploadFile(seafile_upload_file_link: str, seafile_folder: str, file_path: str, progress: jSeaFileProgress = None):
         # Multipart/form-data format으로 전달해야 함
 
         try:
             e = MultipartEncoder(fields={
-                    'parent_dir':seafile_folder,
-                    'file':(os.path.basename(file_path), open(file_path, 'rb')),
-                    'replace':'1'
+                    'parent_dir': seafile_folder,
+                    'file': (os.path.basename(file_path), open(file_path, 'rb')),
+                    'replace': '1'
                 })
-            
+
             callback_class = jSeafileUploadMonitor(progress, file_path)
             m = MultipartEncoderMonitor(e, callback_class.callback)
             requests.post(seafile_upload_file_link, data = m, headers={'Content-Type':m.content_type})
@@ -388,7 +388,8 @@ class jSeaFile:
 
     def AuthPing(self):
         text = self.__GetResponseUsingToken('/api2/auth/ping/')
-        if text == None: return ""
+        if text is None:
+            return ""
         return text
 
     def Ping(self):
@@ -399,12 +400,16 @@ class jSeaFile:
         except Exception:
             return ""
 
+    def RequestCancel(self):
+        # 아직 구현되지 않음
+        pass
+
     def __ParseResponseText(text: str):
         if len(text) >= 2:
-            if text[0:1] == '\"' and text[len(text) - 1 : ] =='\"':
+            if text[0:1] == '\"' and text[len(text) - 1:] == '\"':
                 # "" 로 묶여 있으면 없애주자
-                return text[1 : len(text) - 1]
-        
+                return text[1: len(text) - 1]
+
         return text
 
     def __GetFileName(path: str):

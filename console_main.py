@@ -11,8 +11,8 @@ import os
 from getpass import getpass
 
 from jconsole.parser import jConsoleParser, jConsoleParseResult
-from jlib.seafile import jSeaFile, jSeaFileProgress
-from j18config import j18Config
+from .seafile import jSeaFile, jSeaFileProgress
+from .console_config import j18Config
 from environment import Environment
 from res import res_from
 
@@ -112,7 +112,7 @@ class j18Main (jConsoleParser):
 
     def ApplyOptions(self):
         # 다음순서 Option을 체크하며 순서대로 읽는다
-        options:dict = {
+        options: dict = {
             "-skip-same-file" : self.__ApplyOptionSkipSameFile,
             "-update-line-by-step" : self.__ApplyOptionUpdateLineByStep,
             "-r" : self.__ApplyOptionRepository,
@@ -128,10 +128,10 @@ class j18Main (jConsoleParser):
                 jConsoleParser.PrintErrorLn(error_code.option_duplication.value, 
                     res.message)
                 return False
-            
+
             if not res.is_exist:
                 continue
-            
+
             if not function(res.option_value):
                 jConsoleParser.PrintErrorLn(error_code.option_is_wrong.value,
                     'option is wrong: ' + option)
@@ -141,7 +141,7 @@ class j18Main (jConsoleParser):
         jConsoleParser.PrintErrorLn(error_code.unknown_argument.value, 
                     "unkown argument: " + self.check_waiting_options[0].key)
         return False
-    
+
     def __CommandHelp(self):
         jConsoleParser.PrintLn('j18 version ' + Environment.version + ' copyright(c) 2023. juno-studio all rights reserved.')
         jConsoleParser.PrintLn()
@@ -150,13 +150,14 @@ class j18Main (jConsoleParser):
             current_locale = str(locale.getlocale()[0])
 
             # Windows에서는 locale 이름이 다르다
-            if current_locale == "Korean_Korea": current_locale = "ko_KR"
+            if current_locale == "Korean_Korea":
+                current_locale = "ko_KR"
 
             help_file_path = res_from("resource/help_" + current_locale + ".txt")
-            with open (help_file_path, "r", encoding='UTF8') as help_file:
+            with open(help_file_path, "r", encoding='UTF8') as help_file:
                 jConsoleParser.PrintLn(help_file.read())
         except Exception:
-            with open (res_from("resource/help_en_US.txt"), "r", encoding='UTF8') as help_file:
+            with open(res_from("resource/help_en_US.txt"), "r", encoding='UTF8') as help_file:
                 jConsoleParser.PrintLn(help_file.read())
 
         return error_code.success
@@ -164,43 +165,42 @@ class j18Main (jConsoleParser):
     def __CommandVersion(self):
         jConsoleParser.PrintLn(Environment.version)
         return error_code.success
-    
+
     def __CommandShowConfig(self):
         try:
-            current_locale = locale.getlocale()
-            with open (os.path.expanduser("~/.j18/") + "config", "r", encoding='UTF8') as config_file:
+            with open(os.path.expanduser("~/.j18/") + "config", "r", encoding='UTF8') as config_file:
                 jConsoleParser.PrintLn(config_file.read())
         except Exception:
             jConsoleParser.PrintLn("Config file not found")
         return error_code.success
-    
+
     def __CommandGetToken(self):
         if self.config.address == "":
             jConsoleParser.PrintErrorLn(-1, 'The following options are required.')
             jConsoleParser.PrintErrorLn(-1, 'option: --s{ServerName}')
             return error_code.valid_failed
-        
+
         user_name = input("user_name:")
         password = getpass("password:")
         token = self.seafile.GetApiToken(user_name, password)
         if token == "":
             jConsoleParser.PrintErrorLn(-1, 'get-token failed')
             return error_code.command_failed
-        
+
         jConsoleParser.PrintLn('token:' + token)
         return error_code.success
-    
+
     def __CommandGetRepoList(self):
         if self.config.address == "":
             jConsoleParser.PrintLn('[error:xxxx] The following options are required.')
             jConsoleParser.PrintLn('[error:xxxx] option: --s{ServerName}')
             return error_code.valid_failed
-        
+
         items = self.seafile.GetRepositoryList()
         if items is None:
             jConsoleParser.PrintErrorLn(-1, 'Get Repository List Failed')
             return error_code.command_failed
-        
+
         for item in items:
             jConsoleParser.PrintLn(item.name + "(" + item.permission + ") -> " + item.id)
 
@@ -242,7 +242,7 @@ class j18Main (jConsoleParser):
         if items is None:
             jConsoleParser.PrintLn(f"[error:xxxx] Get Item List (Target Directory={self.target})")
             return error_code.command_failed
-        
+
         if len(items) != 0:
             for item in items:
                 if item.is_directory:
@@ -265,20 +265,20 @@ class j18Main (jConsoleParser):
             return error_code.success
         else:
             jConsoleParser.PrintLn()
-            jConsoleParser.PrintErrorLn(-1, 'upload failed');
-            return error_code.command_failed        
+            jConsoleParser.PrintErrorLn(-1, 'upload failed')
+            return error_code.command_failed
 
-    def CommandValidate(self, show_success_message:bool = True):
+    def CommandValidate(self, show_success_message: bool = True):
         if self.seafile.CheckAddress() == False:
             jConsoleParser.PrintErrorLn(1, 'Connect Failed (Check Address:' + self.config.address + ')')
             return error_code.valid_failed
-        
+
         if self.config.token != '':
             # Token이 세팅되어 있으니 Token 문제 없나 체크
             if self.seafile.CheckToken() == False:
                 jConsoleParser.PrintErrorLn(2, 'Permission declined (Check Token:' + self.config.token + ')')
                 return error_code.valid_failed
-            
+
             # Repos가 세팅되어 있으니 Repos 체크
             if self.config.repos_id != '':
                 found = False
@@ -286,16 +286,16 @@ class j18Main (jConsoleParser):
                     if item.id == self.config.repos_id:
                         found = True
                         break
-                
-                if found == False:
+
+                if found is False:
                     jConsoleParser.PrintErrorLn(3, 'Repos not found (Check Repos:' + self.config.repos_id + ')')
                     return error_code.valid_failed
-                
+
         if show_success_message:
             jConsoleParser.PrintLn("OK")
-        
+
         return error_code.success
-    
+
     def __ApplyOptionSkipSameFile(self, value: str):
         self.skip_same_file = True
         return True
@@ -308,20 +308,20 @@ class j18Main (jConsoleParser):
         if self._SetRepository(value) is False:
             return False
         return True
-    
+
     def __ApplyOptionTarget(self, value: str):
         self.target = value
         return True
-    
+
     def __ApplyOptionDestination(self, value: str):
         self.dest = os.path.expanduser(value)
         return True
-    
+
     def __ApplyOptionServer(self, value: str):
         if self._SetServer(value) is False:
             return False
         return True
-    
+
     def __ApplyOptionConnection(self, value: str):
         if self._SetServerAndRepository(value) == False:
             return False
@@ -332,43 +332,43 @@ class j18Main (jConsoleParser):
         if self.config.address == '':
             jConsoleParser.PrintLn('[error:0004] Unknown Server Name: ' + argument)
             return False
-        
+
         self.seafile.SetAddress(self.config.address)
         self.seafile.SetApiToken(self.config.token)
 
         if self.config.address == '':
             jConsoleParser.PrintLn('[ER] Addess is empty: ')
             return False
-        
+
         return True
-    
+
     def _SetRepository(self, argument: str):
         self.config.SetRepository(argument)
         if self.config.repos_id == '':
             jConsoleParser.PrintLn('[error:0005] Unknown Repository Name: ' + argument)
             return False
-        
+
         self.seafile.SetRepositoryId(self.config.repos_id)
         return True
-    
+
     def _SetServerAndRepository(self, argument: str):
         self.config.SetServerAndRepository(argument)
         if self.config.address == '':
             jConsoleParser.PrintLn('[error:xxxx] --c{ConnectionName}')
             jConsoleParser.PrintLn('[error:xxxx] Unknown Connection Name: ' + argument)
             return False
-        
+
         self.seafile.SetAddress(self.config.address)
         self.seafile.SetApiToken(self.config.token)
 
         if self.config.address == '':
             jConsoleParser.PrintLn('[error:xxxx] Addess is empty: ')
             return False
-        
+
         if self.config.repos_id == '':
             jConsoleParser.PrintLn('[error:xxxx] Repository ID is empty: ')
             return False
-        
+
         self.seafile.SetRepositoryId(self.config.repos_id)
         return True
 
@@ -380,18 +380,18 @@ def Run():
     if result == jConsoleParseResult.TOO_MOUCH_COMMAND:
         jConsoleParser.PrintErrorLn(error_code.too_much_command.value, 'limit to only use a single command ')
         return
-    
+
     if result == jConsoleParseResult.UNKNOWN_ARGUMENT:
         jConsoleParser.PrintErrorLn(error_code.unknown_argument.value, 'unknown argument')
         return
-    
+
     if result == jConsoleParseResult.UNKNOWN_COMMAND:
         jConsoleParser.PrintErrorLn(error_code.unknown_argument.value, 'unknown command: ' + main.command)
         return
-    
+
     if main.ApplyOptions() is False:
         return
-    
+
     if main.ExecuteCommand() == error_code.command_failed:
         main.CommandValidate(False)
 

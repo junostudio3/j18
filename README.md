@@ -17,9 +17,9 @@
 ## PyInstaller 를 이용하여 직접 실행파일 만드는 법
 - Linux or Mac
     ```
-    pyinstaller --onefile --add-data="resource/*:resource" -n j18 j18.py
+    pyinstaller --onefile --add-data="resource/*:resource" -n j18 console_main.py
     ```
 - Windows
     ```
-    pyinstaller --onefile --add-data="resource/*;resource" -n j18 j18.py
+    pyinstaller --onefile --add-data="resource/*;resource" -n j18 console_main.py
     ```
