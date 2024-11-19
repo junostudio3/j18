@@ -193,7 +193,7 @@ class jSeaFile:
                     del download_items[item_index]
                     item_index = item_index - 1
                 else:
-                    if os.path.isdir(out_path) == True:
+                    if os.path.isdir(out_path) is True:
                         # 파일과 같은 디렉토리가 있다.
                         # 이러면 다운로드가 불가능하다
                         return False
