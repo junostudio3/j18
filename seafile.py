@@ -28,19 +28,19 @@ class jSeaFileProgress:
         self.target = target
         self.firstRun = True
 
-    def SetStartSummary(self, total_size):
-        self.target.SetStartSummary(total_size)
+    def SetStartSummary(self, totalSize):
+        self.target.SetStartSummary(totalSize)
 
-    def Init(self, file_name):
+    def Init(self, fileName):
         self.firstRun = True
-        self.fileName = file_name
+        self.fileName = fileName
 
-    def Doing(self, block_num, block_size, total_size):
+    def Doing(self, blockNum, blockSize, totalSize):
         if self.firstRun is True:
-            self.target.Start(self.fileName, total_size)
+            self.target.Start(self.fileName, totalSize)
             self.firstRun = False
 
-        downloaded = min(total_size, block_num * block_size)
+        downloaded = min(totalSize, blockNum * blockSize)
         self.target.Proc(downloaded)
 
     def End(self):
@@ -48,13 +48,13 @@ class jSeaFileProgress:
 
 
 class jSeafileUploadMonitor:
-    def __init__(self, progress: jSeaFileProgress, file_path: str):
+    def __init__(self, progress: jSeaFileProgress, filePath: str):
         self.progress = progress
-        self.totalSize = os.path.getsize(file_path)
+        self.totalSize = os.path.getsize(filePath)
 
         if progress is not None:
             progress.SetStartSummary(self.totalSize)
-            progress.Init(os.path.basename(file_path))
+            progress.Init(os.path.basename(filePath))
 
     def callback(self, monitor: MultipartEncoderMonitor):
         self.progress.Doing(1, monitor.bytes_read, self.totalSize)
@@ -333,26 +333,26 @@ class jSeaFile:
         items: list[jSeaFileItem] = []
 
         url = '/api2/repos/' + self.repoId + '/dir/'
-        json_object = self.__GetResponseJsonUsingToken(url, {'p': seafilePath,
+        jsonObject = self.__GetResponseJsonUsingToken(url, {'p': seafilePath,
                                                              'recursive': '1'})
-        if json_object is None:
+        if jsonObject is None:
             return None
 
         try:
-            for json_item in json_object:
-                name = json_item['name']
-                is_directory = json_item['type'] == 'dir'
-                if 'parent_dir' in json_item:
-                    parent_dir = json_item['parent_dir']
+            for jsonItem in jsonObject:
+                name = jsonItem['name']
+                isDirectory = jsonItem['type'] == 'dir'
+                if 'parent_dir' in jsonItem:
+                    parent_dir = jsonItem['parent_dir']
                 else:
                     parent_dir = "/"
-                mtime = int(json_item['mtime'])
+                mtime = int(jsonItem['mtime'])
                 size = 0
-                if is_directory is False:
-                    size = int(json_item['size'])
+                if isDirectory is False:
+                    size = int(jsonItem['size'])
                 item = jSeaFileItem(GetCombinePath(parent_dir, name),
                                     name,
-                                    is_directory,
+                                    isDirectory,
                                     mtime,
                                     size)
                 items.append(item)
@@ -366,25 +366,25 @@ class jSeaFile:
         items: list[jSeaFileItem] = []
 
         url = '/api2/repos/' + self.repoId + '/dir/'
-        json_object = self.__GetResponseJsonUsingToken(url, {'p': dirPath})
-        if json_object is None:
+        jsonObject = self.__GetResponseJsonUsingToken(url, {'p': dirPath})
+        if jsonObject is None:
             return None
 
         try:
-            for json_item in json_object:
-                name = json_item['name']
-                is_directory = json_item['type'] == 'dir'
-                if 'parent_dir' in json_item:
-                    parent_dir = json_item['parent_dir']
+            for jsonItem in jsonObject:
+                name = jsonItem['name']
+                isDirectory = jsonItem['type'] == 'dir'
+                if 'parent_dir' in jsonItem:
+                    parentDir = jsonItem['parent_dir']
                 else:
-                    parent_dir = "/"
-                mtime = int(json_item['mtime'])
+                    parentDir = "/"
+                mtime = int(jsonItem['mtime'])
                 size = 0
-                if is_directory is False:
-                    size = int(json_item['size'])
-                item = jSeaFileItem(GetCombinePath(parent_dir, name),
+                if isDirectory is False:
+                    size = int(jsonItem['size'])
+                item = jSeaFileItem(GetCombinePath(parentDir, name),
                                     name,
-                                    is_directory,
+                                    isDirectory,
                                     mtime,
                                     size)
                 items.append(item)
@@ -414,8 +414,8 @@ class jSeaFile:
                     'replace': '1'
                 })
 
-            callback_class = jSeafileUploadMonitor(progress, filePath)
-            m = MultipartEncoderMonitor(e, callback_class.callback)
+            callbackClass = jSeafileUploadMonitor(progress, filePath)
+            m = MultipartEncoderMonitor(e, callbackClass.callback)
             requests.post(seafileUploadFileLink,
                           data=m,
                           headers={'Content-Type': m.content_type})
