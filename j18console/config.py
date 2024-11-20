@@ -13,33 +13,33 @@ class jConfigParser:
     def __init__(self):
         self.file = configparser.ConfigParser()
 
-    def Load(self, file_path: str):
+    def Load(self, filePath: str):
         try:
-            self.file.read(file_path, encoding="UTF8")
+            self.file.read(filePath, encoding="UTF8")
 
         except Exception:
-            self.file.read(file_path)
+            self.file.read(filePath)
 
-    def Save(self, file_path: str):
+    def Save(self, filePath: str):
         try:
-            with open(file_path, 'wt', encoding="UTF8") as configfile:
+            with open(filePath, 'wt', encoding="UTF8") as configfile:
                 self.file.write(configfile)
                 return True
 
         except Exception:
             return False
 
-    def ReadBoolean(self, category: str, key: str, default_value: bool):
-        return self.ReadInt(category, key, int(default_value)) != 0
+    def ReadBoolean(self, category: str, key: str, defaultValue: bool):
+        return self.ReadInt(category, key, int(defaultValue)) != 0
 
-    def ReadInt(self, category: str, key: str, default_value: int):
-        return int(self.ReadText(category, key, str(default_value)))
+    def ReadInt(self, category: str, key: str, defaultValue: int):
+        return int(self.ReadText(category, key, str(defaultValue)))
 
-    def ReadText(self, category: str, key: str, default_value: str):
+    def ReadText(self, category: str, key: str, defaultValue: str):
         if category not in self.file:
-            return default_value
+            return defaultValue
         if key not in self.file[category]:
-            return default_value
+            return defaultValue
 
         return self.file[category][key]
 
@@ -67,18 +67,21 @@ class j18Config():
         self.file.Load(os.path.expanduser("~/.j18/") + "config")
         self.address = ""
         self.token = ""
-        self.repos_id = ""
+        self.reposId = ""
 
     def SetServer(self, server_name: str):
-        self.address = self.file.ReadText("server_" + server_name, "address", "")
-        self.token = self.file.ReadText("server_" + server_name, "token", "")
+        category = "server_" + server_name
+        self.address = self.file.ReadText(category, "address", "")
+        self.token = self.file.ReadText(category, "token", "")
 
     def SetRepository(self, repository_name: str):
-        self.repos_id = self.file.ReadText("repos_" + repository_name, "id", "")
+        category = "repos_" + repository_name
+        self.reposId = self.file.ReadText(category, "id", "")
 
     def SetServerAndRepository(self, connection_name: str):
-        server = self.file.ReadText("connection_" + connection_name, "server", "")
-        repos = self.file.ReadText("connection_" + connection_name, "repos", "")
+        category = "connection_" + connection_name
+        server = self.file.ReadText(category, "server", "")
+        repos = self.file.ReadText(category, "repos", "")
 
         self.SetServer(server)
         self.SetRepository(repos)
