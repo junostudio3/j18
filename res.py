@@ -9,7 +9,7 @@ import os
 import sys
 
 
-def GetResPath(relativePath):
+def GetAppPath(relativePath):
     try:
         # PyInstaller에 의해 임시폴더에서 실행될 경우 임시폴더로 접근하는 함수
         basePath = sys._MEIPASS
@@ -21,9 +21,12 @@ def GetResPath(relativePath):
     return os.path.join(basePath, relativePath).replace("\\", "/")
 
 
-def LoadResText(relativePath):
+def GetResourcePath(relativePath):
+    return GetAppPath("resource/" + relativePath)
+
+def LoadResourceText(relativePath):
     try:
-        with open(GetResPath(relativePath), "r", encoding="utf-8") as f:
+        with open(GetResourcePath(relativePath), "r", encoding="utf-8") as f:
             return f.read()
 
     except Exception:

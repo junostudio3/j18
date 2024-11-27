@@ -14,7 +14,7 @@ from jconsole.parser import jConsoleParser as jCP
 from jconsole.parser import jConsoleParseResult as jCPResult
 from seafile import jSeaFile, jSeaFileProgress
 from environment import Environment
-from res import LoadResText
+from res import LoadResourceText
 from j18console.config import j18Config
 from j18console.progress import ConsolePorgress
 
@@ -99,9 +99,9 @@ class j18Main (jCP):
         if currentLocale == "Korean_Korea":
             currentLocale = "ko_KR"
 
-        text = LoadResText(f"resource/help_{currentLocale}.txt")
+        text = LoadResourceText(f"help_{currentLocale}.txt")
         if text == "":
-            text = LoadResText("resource/help_en_US.txt")
+            text = LoadResourceText("help_en_US.txt")
 
         jCP.PrintLn(text)
 
