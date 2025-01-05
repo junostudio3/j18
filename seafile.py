@@ -48,13 +48,13 @@ class jSeaFileProgress:
 
 
 class jSeafileUploadMonitor:
-    def __init__(self, progress: jSeaFileProgress, file_path: str):
+    def __init__(self, progress: jSeaFileProgress, filepath: str):
         self.progress = progress
-        self.totalSize = os.path.getsize(file_path)
+        self.totalSize = os.path.getsize(filepath)
 
         if progress is not None:
             progress.SetStartSummary(self.totalSize)
-            progress.Init(os.path.basename(file_path))
+            progress.Init(os.path.basename(filepath))
 
     def callback(self, monitor: MultipartEncoderMonitor):
         self.progress.Doing(1, monitor.bytes_read, self.totalSize)
@@ -135,9 +135,9 @@ class jSeaFile:
 
         return True
 
-    def IsExistFile(self, file_path: str):
+    def IsExistFile(self, filepath: str):
         # /file/detail 명령으로 체크함
-        if self.GetFileDetail(file_path) is None:
+        if self.GetFileDetail(filepath) is None:
             return False
 
         return True
@@ -270,17 +270,17 @@ class jSeaFile:
 
         return True
 
-    def GetDownloadFileLink(self, file_path: str):
+    def GetDownloadFileLink(self, filepath: str):
         url = '/api2/repos/' + self.repo_id + '/file/'
         text = self.__GetResponseUsingToken(url,
-                                            {'p': file_path, 'reuse': '0'})
+                                            {'p': filepath, 'reuse': '0'})
         if text is None:
             return ""
         return text
 
-    def GetFileDetail(self, file_path: str):
+    def GetFileDetail(self, filepath: str):
         url = '/api2/repos/' + self.repo_id + '/file/detail/'
-        json_object = self.__GetResponseJsonUsingToken(url, {'p': file_path})
+        json_object = self.__GetResponseJsonUsingToken(url, {'p': filepath})
         if json_object is None:
             return None
 
@@ -404,18 +404,18 @@ class jSeaFile:
 
     def UploadFile(seafile_uploadfilelink: str,
                    seafile_folder: str,
-                   file_path: str,
+                   filepath: str,
                    progress: jSeaFileProgress = None):
         # Multipart/form-data format으로 전달해야 함
 
         try:
             e = MultipartEncoder(fields={
                 'parent_dir': seafile_folder,
-                'file': (os.path.basename(file_path), open(file_path, 'rb')),
+                'file': (os.path.basename(filepath), open(filepath, 'rb')),
                 'replace': '1'
                 })
 
-            callback_class = jSeafileUploadMonitor(progress, file_path)
+            callback_class = jSeafileUploadMonitor(progress, filepath)
             m = MultipartEncoderMonitor(e, callback_class.callback)
             requests.post(seafile_uploadfilelink,
                           data=m,
