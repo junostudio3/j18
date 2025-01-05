@@ -38,7 +38,7 @@ class j18Main (jCP):
         self.config = j18Config()
         self.target = "/"
         self.dest = os.getcwd()
-        self.skipSameFile = False
+        self.skip_same_file = False
         self.AddCommandLink('--help', self.__CommandHelp)
         self.AddCommandLink('--version', self.__CommandVersion)
         self.AddCommandLink('--show-config', self.__CommandShowConfig)
@@ -157,8 +157,8 @@ class j18Main (jCP):
         info = self.seafile.GetFileDetail(self.target)
         if info is not None:
             jCP.PrintLn(" ID: " + info.id)
-            jCP.PrintLn(" Last Modifier Name: " + info.lastModifierName)
-            jCP.PrintLn(" Last Modified: " + str(info.lastModified))
+            jCP.PrintLn(" Last Modifier Name: " + info.last_modifier_name)
+            jCP.PrintLn(" Last Modified: " + str(info.last_modified))
             jCP.PrintLn(" Size: " + str(info.size))
             return error_code.success
         else:
@@ -170,7 +170,7 @@ class j18Main (jCP):
 
         if self.seafile.Download(self.target,
                                  self.dest,
-                                 self.skipSameFile,
+                                 self.skip_same_file,
                                  progress):
             jCP.PrintLn("download success")
             return error_code.success
@@ -196,7 +196,7 @@ class j18Main (jCP):
 
         if len(items) != 0:
             for item in items:
-                if item.isDirectory:
+                if item.is_directory:
                     jCP.PrintLn("[D] " + item.name)
                 else:
                     jCP.PrintLn(f"[F] {item.name} ({item.size} bytes)")
@@ -233,15 +233,15 @@ class j18Main (jCP):
                 return error_code.valid_failed
 
             # Repos가 세팅되어 있으니 Repos 체크
-            if self.config.reposId != '':
+            if self.config.repos_id != '':
                 found = False
                 for item in self.seafile.GetRepositoryList():
-                    if item.id == self.config.reposId:
+                    if item.id == self.config.repos_id:
                         found = True
                         break
 
                 if found is False:
-                    reposId = self.config.reposId
+                    reposId = self.config.repos_id
                     jCP.PrintErrorLn(3, f'Repos not found (Repos:{reposId})')
                     return error_code.valid_failed
 
@@ -251,12 +251,12 @@ class j18Main (jCP):
         return error_code.success
 
     def __ApplyOptionSkipSameFile(self, value: str):
-        self.skipSameFile = True
+        self.skip_same_file = True
         return True
 
     def __ApplyOptionUpdateLineByStep(self, value: str):
-        self.progressDownload.updateLineByStep = True
-        self.progressUpload.updateLineByStep = True
+        self.progressDownload.update_line_by_step = True
+        self.progressUpload.update_line_by_step = True
         return True
 
     def __ApplyOptionRepository(self, value: str):
@@ -299,11 +299,11 @@ class j18Main (jCP):
 
     def _SetRepository(self, argument: str):
         self.config.SetRepository(argument)
-        if self.config.reposId == '':
+        if self.config.repos_id == '':
             jCP.PrintLn('[error:0005] Unknown Repository Name: ' + argument)
             return False
 
-        self.seafile.SetRepositoryId(self.config.reposId)
+        self.seafile.SetRepositoryId(self.config.repos_id)
         return True
 
     def _SetServerAndRepository(self, argument: str):
@@ -320,11 +320,11 @@ class j18Main (jCP):
             jCP.PrintLn('[error:xxxx] Addess is empty: ')
             return False
 
-        if self.config.reposId == '':
+        if self.config.repos_id == '':
             jCP.PrintLn('[error:xxxx] Repository ID is empty: ')
             return False
 
-        self.seafile.SetRepositoryId(self.config.reposId)
+        self.seafile.SetRepositoryId(self.config.repos_id)
         return True
 
 

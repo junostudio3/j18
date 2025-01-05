@@ -29,17 +29,17 @@ class jConfigParser:
         except Exception:
             return False
 
-    def ReadBoolean(self, category: str, key: str, defaultValue: bool):
-        return self.ReadInt(category, key, int(defaultValue)) != 0
+    def ReadBoolean(self, category: str, key: str, default_value: bool):
+        return self.ReadInt(category, key, int(default_value)) != 0
 
-    def ReadInt(self, category: str, key: str, defaultValue: int):
-        return int(self.ReadText(category, key, str(defaultValue)))
+    def ReadInt(self, category: str, key: str, default_value: int):
+        return int(self.ReadText(category, key, str(default_value)))
 
-    def ReadText(self, category: str, key: str, defaultValue: str):
+    def ReadText(self, category: str, key: str, default_value: str):
         if category not in self.file:
-            return defaultValue
+            return default_value
         if key not in self.file[category]:
-            return defaultValue
+            return default_value
 
         return self.file[category][key]
 
@@ -67,7 +67,7 @@ class j18Config():
         self.file.Load(os.path.expanduser("~/.j18/") + "config")
         self.address = ""
         self.token = ""
-        self.reposId = ""
+        self.repos_id = ""
 
     def SetServer(self, server_name: str):
         category = "server_" + server_name
@@ -76,7 +76,7 @@ class j18Config():
 
     def SetRepository(self, repository_name: str):
         category = "repos_" + repository_name
-        self.reposId = self.file.ReadText(category, "id", "")
+        self.repos_id = self.file.ReadText(category, "id", "")
 
     def SetServerAndRepository(self, connection_name: str):
         category = "connection_" + connection_name

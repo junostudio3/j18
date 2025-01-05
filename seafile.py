@@ -48,13 +48,13 @@ class jSeaFileProgress:
 
 
 class jSeafileUploadMonitor:
-    def __init__(self, progress: jSeaFileProgress, filePath: str):
+    def __init__(self, progress: jSeaFileProgress, file_path: str):
         self.progress = progress
-        self.totalSize = os.path.getsize(filePath)
+        self.totalSize = os.path.getsize(file_path)
 
         if progress is not None:
             progress.SetStartSummary(self.totalSize)
-            progress.Init(os.path.basename(filePath))
+            progress.Init(os.path.basename(file_path))
 
     def callback(self, monitor: MultipartEncoderMonitor):
         self.progress.Doing(1, monitor.bytes_read, self.totalSize)
@@ -71,25 +71,25 @@ class jSeaFileInfo:
     def __init__(self):
         self.name = ""
         self.id = ""
-        self.lastModifierName = ""
-        self.lastModified: datetime = None
+        self.last_modifier_name = ""
+        self.last_modified: datetime = None
         self.size = 0
 
 
 class jSeaFileItem:
     def __init__(self, fullPath: str, name: str,
                  isDirectory: bool, mtime: int, size: int):
-        self.fullPath = fullPath
+        self.full_path = fullPath
         self.name = name
-        self.isDirectory = isDirectory
-        self.lastModified: datetime = datetime.fromtimestamp(mtime)
+        self.is_directory = isDirectory
+        self.last_modified: datetime = datetime.fromtimestamp(mtime)
         self.size = size
 
 
 class jSeaFile:
     url: str = ""
     apiToken: str = ""
-    repoId: str = ""
+    repo_id: str = ""
 
     def SetAddress(self, url: str):
         self.url = url
@@ -97,12 +97,12 @@ class jSeaFile:
     def SetApiToken(self, token):
         self.apiToken = token
 
-    def SetRepositoryId(self, repoId):
-        self.repoId = repoId
+    def SetRepositoryId(self, repo_id):
+        self.repo_id = repo_id
 
-    def GetApiToken(self, userName: str, password: str):
+    def GetApiToken(self, user_name: str, password: str):
         try:
-            postData = urllib.parse.urlencode({'username': userName,
+            postData = urllib.parse.urlencode({'username': user_name,
                                                'password': password})
             url = urlReqeust.Request(self.url + '/api2/auth-token/',
                                      postData.encode('UTF-8'))
@@ -126,11 +126,11 @@ class jSeaFile:
             return False
         return True
 
-    def IsExistDirectory(self, dirPath: str):
+    def IsExistDirectory(self, dir_path: str):
         # /dir/detail 명령이 동작하지 않아서 /dir/ 명령을 사용했다
-        url = '/api2/repos/' + self.repoId + '/dir/'
-        jsonObject = self.__GetResponseJsonUsingToken(url, {'p': dirPath})
-        if jsonObject is None:
+        url = '/api2/repos/' + self.repo_id + '/dir/'
+        json_object = self.__GetResponseJsonUsingToken(url, {'p': dir_path})
+        if json_object is None:
             return False
 
         return True
@@ -144,7 +144,7 @@ class jSeaFile:
 
     def CreateDirectory(self, path: str):
         text = self.__GetResponseUsingToken(
-            '/api2/repos/' + self.repoId + '/dir/',
+            '/api2/repos/' + self.repo_id + '/dir/',
             {'p': path}, 'operation=mkdir')
 
         if text is None:
@@ -156,130 +156,131 @@ class jSeaFile:
         except Exception:
             return False
 
-    def Download(self, seafilePath: str, outputFolderPath: str,
-                 skipSameFile: bool, progress: jSeaFileProgress = None):
-        masterPathIsFile = True
+    def Download(self, seafile_path: str, output_folder_path: str,
+                 skip_same_file: bool, progress: jSeaFileProgress = None):
+        master_path_is_file = True
 
-        if self.IsExistDirectory(seafilePath):
+        if self.IsExistDirectory(seafile_path):
             # 대상이 폴더면 폴더를 만들고 시작하자
-            fileName = __class__.__GetFileName(seafilePath)
-            outputFolderPath = GetCombinePath(outputFolderPath, fileName)
-            masterPathIsFile = False
+            file_name = __class__.__GetFileName(seafile_path)
+            output_folder_path = GetCombinePath(output_folder_path, file_name)
+            master_path_is_file = False
 
             try:
-                os.mkdir(outputFolderPath)
+                os.mkdir(output_folder_path)
             except Exception:
                 pass
 
-        downloadItems: list[jSeaFileItem] = self.GetSubItemAll(seafilePath)
-        if downloadItems is None:
+        download_items: list[jSeaFileItem] = self.GetSubItemAll(seafile_path)
+        if download_items is None:
             return False
 
-        seaFileName = __class__.__GetFileName(seafilePath)
+        seafilename = __class__.__GetFileName(seafile_path)
 
-        if skipSameFile:
-            itemIndex = -1
+        if skip_same_file:
+            item_index = -1
             while True:
-                itemIndex = itemIndex + 1
-                if itemIndex >= len(downloadItems):
+                item_index = item_index + 1
+                if item_index >= len(download_items):
                     break
 
-                item = downloadItems[itemIndex]
-                if masterPathIsFile:
+                item = download_items[item_index]
+                if master_path_is_file:
                     # 선택된 대상이 파일이었으면 그대로 출력
-                    outPath = GetCombinePath(outputFolderPath, seaFileName)
+                    out_path = GetCombinePath(output_folder_path, seafilename)
                 else:
                     # 선택된 대상이 폴더였으면 파일 경로를 상대경로로 만들어 출력
-                    relativePath = item.fullPath[len(seafilePath):]
-                    outPath = GetCombinePath(outputFolderPath, relativePath)
+                    relative_path = item.full_path[len(seafile_path):]
+                    out_path = GetCombinePath(output_folder_path, relative_path)
 
-                if os.path.exists(outPath) is False:
+                if os.path.exists(out_path) is False:
                     continue
 
-                if item.isDirectory:
-                    if os.path.isdir(outPath) is False:
+                if item.is_directory:
+                    if os.path.isdir(out_path) is False:
                         # 디렉토리와 같은 이름의 파일이 있다.
                         # 이러면 다운로드가 불가능하다
                         return False
 
                     # 이미 디렉토리가 있다
-                    del downloadItems[itemIndex]
-                    itemIndex = itemIndex - 1
+                    del download_items[item_index]
+                    item_index = item_index - 1
                     continue
 
                 # 파일이다
-                if os.path.isdir(outPath) is True:
+                if os.path.isdir(out_path) is True:
                     # 파일과 같은 디렉토리가 있다.
                     # 이러면 다운로드가 불가능하다
                     return False
 
-                if os.path.getsize(outPath) != item.size:
+                if os.path.getsize(out_path) != item.size:
                     continue
 
-                fileModifed = datetime.fromtimestamp(os.path.getmtime(outPath))
-                if fileModifed != item.lastModified:
+                file_modifed = datetime.fromtimestamp(os.path.getmtime(out_path))
+                if file_modifed != item.last_modified:
                     continue
 
                 # 이미 파일이 있다
-                del downloadItems[itemIndex]
-                itemIndex = itemIndex - 1
+                del download_items[item_index]
+                item_index = item_index - 1
 
-        totalSize = 0
-        for item in downloadItems:
-            totalSize += item.size
+        total_size = 0
+        for item in download_items:
+            total_size += item.size
 
         if progress is not None:
-            progress.SetStartSummary(totalSize)
+            progress.SetStartSummary(total_size)
 
-        for item in downloadItems:
-            if masterPathIsFile:
+        for item in download_items:
+            if master_path_is_file:
                 # 선택된 대상이 파일이었으면 그대로 출력
-                outPath = GetCombinePath(outputFolderPath, seaFileName)
+                out_path = GetCombinePath(output_folder_path, seafilename)
             else:
                 # 선택된 대상이 폴더였으면 파일 경로를 상대경로로 만들어 출력
-                relativePath = item.fullPath[len(seafilePath):]
-                outPath = GetCombinePath(outputFolderPath,
-                                         relativePath)
+                relative_path = item.full_path[len(seafile_path):]
+                out_path = GetCombinePath(output_folder_path,
+                                          relative_path)
 
-            if item.isDirectory:
+            if item.is_directory:
                 try:
-                    os.mkdir(outPath)
+                    os.mkdir(out_path)
                 except Exception:
                     pass
 
             else:
-                link = self.GetDownloadFileLink(item.fullPath)
+                link = self.GetDownloadFileLink(item.full_path)
                 if link is None:
                     return False
 
                 try:
                     if progress is None:
-                        urlReqeust.urlretrieve(link, outPath)
+                        urlReqeust.urlretrieve(link, out_path)
                     else:
                         progress.Init(item.name)
                         urlReqeust.urlretrieve(link,
-                                               outPath,
+                                               out_path,
                                                progress.Doing)
                         progress.End()
 
-                    tm = time.mktime(item.lastModified.timetuple())
-                    os.utime(outPath, (tm, tm))
+                    tm = time.mktime(item.last_modified.timetuple())
+                    os.utime(out_path, (tm, tm))
 
                 except Exception:
                     return False
 
         return True
 
-    def GetDownloadFileLink(self, filePath: str):
-        url = '/api2/repos/' + self.repoId + '/file/'
-        text = self.__GetResponseUsingToken(url, {'p': filePath, 'reuse': '0'})
+    def GetDownloadFileLink(self, file_path: str):
+        url = '/api2/repos/' + self.repo_id + '/file/'
+        text = self.__GetResponseUsingToken(url,
+                                            {'p': file_path, 'reuse': '0'})
         if text is None:
             return ""
         return text
 
-    def GetFileDetail(self, filePath: str):
-        url = '/api2/repos/' + self.repoId + '/file/detail/'
-        json_object = self.__GetResponseJsonUsingToken(url, {'p': filePath})
+    def GetFileDetail(self, file_path: str):
+        url = '/api2/repos/' + self.repo_id + '/file/detail/'
+        json_object = self.__GetResponseJsonUsingToken(url, {'p': file_path})
         if json_object is None:
             return None
 
@@ -289,8 +290,8 @@ class jSeaFile:
             info = jSeaFileInfo()
             info.name = json_object['name']
             info.id = json_object['id']
-            info.lastModifierName = json_object['last_modifier_name']
-            info.lastModified = last_modified
+            info.last_modifier_name = json_object['last_modifier_name']
+            info.last_modified = last_modified
             info.size = json_object['size']
             return info
 
@@ -300,16 +301,16 @@ class jSeaFile:
     def GetRepositoryList(self):
         items: list[jSeaRepositoryInfo] = []
 
-        jsonObject = self.__GetResponseJsonUsingToken('/api2/repos/')
-        if jsonObject is None:
+        json_object = self.__GetResponseJsonUsingToken('/api2/repos/')
+        if json_object is None:
             return None
 
         try:
-            for jsonItem in jsonObject:
+            for json_item in json_object:
                 item = jSeaRepositoryInfo()
-                item.name = jsonItem['name']
-                item.id = jsonItem['id']
-                item.permission = jsonItem['permission']
+                item.name = json_item['name']
+                item.id = json_item['id']
+                item.permission = json_item['permission']
                 items.append(item)
 
         except Exception:
@@ -317,42 +318,42 @@ class jSeaFile:
 
         return items
 
-    def GetSubItemAll(self, seafilePath: str):
+    def GetSubItemAll(self, seafilepath: str):
         collect_items: list[jSeaFileItem] = []
 
-        info = self.GetFileDetail(seafilePath)
+        info = self.GetFileDetail(seafilepath)
         if info is not None:
             # 파일이다
-            collect_items.append(jSeaFileItem(seafilePath,
+            collect_items.append(jSeaFileItem(seafilepath,
                                               info.name,
                                               False,
-                                              info.lastModified.timestamp(),
+                                              info.last_modified.timestamp(),
                                               info.size))
             return collect_items
 
         items: list[jSeaFileItem] = []
 
-        url = '/api2/repos/' + self.repoId + '/dir/'
-        jsonObject = self.__GetResponseJsonUsingToken(url, {'p': seafilePath,
+        url = '/api2/repos/' + self.repo_id + '/dir/'
+        json_object = self.__GetResponseJsonUsingToken(url, {'p': seafilepath,
                                                              'recursive': '1'})
-        if jsonObject is None:
+        if json_object is None:
             return None
 
         try:
-            for jsonItem in jsonObject:
-                name = jsonItem['name']
-                isDirectory = jsonItem['type'] == 'dir'
-                if 'parent_dir' in jsonItem:
-                    parent_dir = jsonItem['parent_dir']
+            for json_item in json_object:
+                name = json_item['name']
+                is_directory = json_item['type'] == 'dir'
+                if 'parent_dir' in json_item:
+                    parent_dir = json_item['parent_dir']
                 else:
                     parent_dir = "/"
-                mtime = int(jsonItem['mtime'])
+                mtime = int(json_item['mtime'])
                 size = 0
-                if isDirectory is False:
-                    size = int(jsonItem['size'])
+                if is_directory is False:
+                    size = int(json_item['size'])
                 item = jSeaFileItem(GetCombinePath(parent_dir, name),
                                     name,
-                                    isDirectory,
+                                    is_directory,
                                     mtime,
                                     size)
                 items.append(item)
@@ -362,29 +363,29 @@ class jSeaFile:
 
         return items
 
-    def GetListItemsInDirectory(self, dirPath: str):
+    def GetListItemsInDirectory(self, dir_path: str):
         items: list[jSeaFileItem] = []
 
-        url = '/api2/repos/' + self.repoId + '/dir/'
-        jsonObject = self.__GetResponseJsonUsingToken(url, {'p': dirPath})
+        url = '/api2/repos/' + self.repo_id + '/dir/'
+        jsonObject = self.__GetResponseJsonUsingToken(url, {'p': dir_path})
         if jsonObject is None:
             return None
 
         try:
             for jsonItem in jsonObject:
                 name = jsonItem['name']
-                isDirectory = jsonItem['type'] == 'dir'
+                is_directory = jsonItem['type'] == 'dir'
                 if 'parent_dir' in jsonItem:
-                    parentDir = jsonItem['parent_dir']
+                    parent_dir = jsonItem['parent_dir']
                 else:
-                    parentDir = "/"
+                    parent_dir = "/"
                 mtime = int(jsonItem['mtime'])
                 size = 0
-                if isDirectory is False:
+                if is_directory is False:
                     size = int(jsonItem['size'])
-                item = jSeaFileItem(GetCombinePath(parentDir, name),
+                item = jSeaFileItem(GetCombinePath(parent_dir, name),
                                     name,
-                                    isDirectory,
+                                    is_directory,
                                     mtime,
                                     size)
                 items.append(item)
@@ -395,28 +396,28 @@ class jSeaFile:
         return items
 
     def GetUploadFileLink(self, path: str):
-        url = self.url + '/api2/repos/' + self.repoId + '/upload-link/'
+        url = self.url + '/api2/repos/' + self.repo_id + '/upload-link/'
         text = self.__GetResponseUsingToken(url, {'p': path})
         if text is None:
             return ""
         return text
 
-    def UploadFile(seafileUploadFileLink: str,
-                   seafileFolder: str,
-                   filePath: str,
+    def UploadFile(seafile_uploadfilelink: str,
+                   seafile_folder: str,
+                   file_path: str,
                    progress: jSeaFileProgress = None):
         # Multipart/form-data format으로 전달해야 함
 
         try:
             e = MultipartEncoder(fields={
-                    'parent_dir': seafileFolder,
-                    'file': (os.path.basename(filePath), open(filePath, 'rb')),
-                    'replace': '1'
+                'parent_dir': seafile_folder,
+                'file': (os.path.basename(file_path), open(file_path, 'rb')),
+                'replace': '1'
                 })
 
-            callbackClass = jSeafileUploadMonitor(progress, filePath)
-            m = MultipartEncoderMonitor(e, callbackClass.callback)
-            requests.post(seafileUploadFileLink,
+            callback_class = jSeafileUploadMonitor(progress, file_path)
+            m = MultipartEncoderMonitor(e, callback_class.callback)
+            requests.post(seafile_uploadfilelink,
                           data=m,
                           headers={'Content-Type': m.content_type})
             return True
@@ -451,33 +452,33 @@ class jSeaFile:
         return text
 
     def __GetFileName(path: str):
-        fileNameStart = path.rfind('/')
-        if fileNameStart < 0:
+        filename_start = path.rfind('/')
+        if filename_start < 0:
             return None
 
-        fileNameStart = fileNameStart + 1
-        return path[fileNameStart:]
+        filename_start = filename_start + 1
+        return path[filename_start:]
 
-    def __GetResponseUsingToken(self, relativeUrl: str,
+    def __GetResponseUsingToken(self, relative_url: str,
                                 parameters: dict[str, str] = None,
                                 post: str = None):
-        urlAddress = self.url + relativeUrl
+        url_address = self.url + relative_url
         if parameters is not None:
             first = True
             for key, value in parameters.items():
                 if first:
-                    urlAddress = urlAddress + "?" + key + "="
+                    url_address = url_address + "?" + key + "="
                 else:
-                    urlAddress = urlAddress + "&" + key + "="
+                    url_address = url_address + "&" + key + "="
 
-                urlAddress = urlAddress + urllib.parse.quote(value)
+                url_address = url_address + urllib.parse.quote(value)
                 first = False
 
         try:
             if post is not None:
                 post = post.encode('utf-8')
 
-            url = urlReqeust.Request(urlAddress, post)
+            url = urlReqeust.Request(url_address, post)
             url.add_header("Authorization", "Token " + self.apiToken)
             url.add_header("Accept",
                            "application/json; charset=utf-8 indent=4")
@@ -489,10 +490,10 @@ class jSeaFile:
         except Exception:
             return None
 
-    def __GetResponseJsonUsingToken(self, relativeUrl: str,
+    def __GetResponseJsonUsingToken(self, relative_url: str,
                                     parameters: dict[str, str] = None,
                                     post: str = None):
-        text = self.__GetResponseUsingToken(relativeUrl, parameters, post)
+        text = self.__GetResponseUsingToken(relative_url, parameters, post)
         if text is None:
             return None
 
