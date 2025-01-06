@@ -395,11 +395,11 @@ class jSeaFile:
 
         return items
 
-    def GetUploadFileLink(self, path: str):
-        url = self.url + '/api2/repos/' + self.repo_id + '/upload-link/'
-        text = self.__GetResponseUsingToken(url, {'p': path})
+    def GetUploadFileLink(self, seafile_folder: str):
+        url = '/api2/repos/' + self.repo_id + '/upload-link/'
+        text = self.__GetResponseUsingToken(url, {'p': seafile_folder})
         if text is None:
-            return ""
+            return None
         return text
 
     def UploadFile(seafile_uploadfilelink: str,
@@ -487,7 +487,7 @@ class jSeaFile:
             text = connection.read().decode("utf-8")
             return jSeaFile.__ParseResponseText(text)
 
-        except Exception:
+        except Exception as e:
             return None
 
     def __GetResponseJsonUsingToken(self, relative_url: str,
