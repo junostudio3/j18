@@ -156,42 +156,52 @@ class jSeaFile:
         except Exception:
             return False
 
-    def Download(self, seafile_path: str, output_folder_path: str,
-                 skip_same_file: bool, progress: jSeaFileProgress = None):
-        master_path_is_file = True
+    def Delete(self, seafile_path: str) -> bool:
+        text = self.__GetResponseUsingToken(
+            '/api2/repos/' + self.repo_id + '/file/',
+            {'p': seafile_path}, method = 'DELETE')
 
-        if self.IsExistDirectory(seafile_path):
-            # 대상이 폴더면 폴더를 만들고 시작하자
-            file_name = __class__.__GetFileName(seafile_path)
-            output_folder_path = GetCombinePath(output_folder_path, file_name)
-            master_path_is_file = False
-
-            try:
-                os.mkdir(output_folder_path)
-            except Exception:
-                pass
-
-        download_items: list[jSeaFileItem] = self.GetSubItemAll(seafile_path)
-        if download_items is None:
+        if text is None:
             return False
 
-        seafilename = __class__.__GetFileName(seafile_path)
+        try:
+            return text == 'success'
+
+        except Exception:
+            return False
+
+    def DownloadFolder(self,
+                       seafile_path: str,
+                       output_folder_path: str,
+                       skip_same_file: bool,
+                       seafile_items: list[jSeaFileItem] = None,
+                       progress: jSeaFileProgress = None) -> {bool, list[str]}:
+        # 목표 위치에 폴더를 만들고 시작하자
+        file_name = __class__.__GetFileName(seafile_path)
+        output_folder_path = GetCombinePath(output_folder_path, file_name)
+
+        try:
+            os.mkdir(output_folder_path)
+        except Exception:
+            pass
+
+        if seafile_items is None:
+            seafile_items = self.GetSubItemAll(seafile_path)
+
+        if seafile_items is None:
+            return False
 
         if skip_same_file:
             item_index = -1
             while True:
                 item_index = item_index + 1
-                if item_index >= len(download_items):
+                if item_index >= len(seafile_items):
                     break
 
-                item = download_items[item_index]
-                if master_path_is_file:
-                    # 선택된 대상이 파일이었으면 그대로 출력
-                    out_path = GetCombinePath(output_folder_path, seafilename)
-                else:
-                    # 선택된 대상이 폴더였으면 파일 경로를 상대경로로 만들어 출력
-                    relative_path = item.full_path[len(seafile_path):]
-                    out_path = GetCombinePath(output_folder_path, relative_path)
+                item = seafile_items[item_index]
+                # 선택된 대상이 폴더였으면 파일 경로를 상대경로로 만들어 출력
+                relative_path = item.full_path[len(seafile_path):]
+                out_path = GetCombinePath(output_folder_path, relative_path)
 
                 if os.path.exists(out_path) is False:
                     continue
@@ -203,7 +213,7 @@ class jSeaFile:
                         return False
 
                     # 이미 디렉토리가 있다
-                    del download_items[item_index]
+                    del seafile_items[item_index]
                     item_index = item_index - 1
                     continue
 
@@ -221,25 +231,21 @@ class jSeaFile:
                     continue
 
                 # 이미 파일이 있다
-                del download_items[item_index]
+                del seafile_items[item_index]
                 item_index = item_index - 1
 
         total_size = 0
-        for item in download_items:
+        for item in seafile_items:
             total_size += item.size
 
         if progress is not None:
             progress.SetStartSummary(total_size)
 
-        for item in download_items:
-            if master_path_is_file:
-                # 선택된 대상이 파일이었으면 그대로 출력
-                out_path = GetCombinePath(output_folder_path, seafilename)
-            else:
-                # 선택된 대상이 폴더였으면 파일 경로를 상대경로로 만들어 출력
-                relative_path = item.full_path[len(seafile_path):]
-                out_path = GetCombinePath(output_folder_path,
-                                          relative_path)
+        for item in seafile_items:
+            # 선택된 대상이 폴더였으면 파일 경로를 상대경로로 만들어 출력
+            relative_path = item.full_path[len(seafile_path):]
+            out_path = GetCombinePath(output_folder_path,
+                                      relative_path)
 
             if item.is_directory:
                 try:
@@ -267,6 +273,61 @@ class jSeaFile:
 
                 except Exception:
                     return False
+
+        return True
+
+    def Download(self, seafile_path: str, output_folder_path: str,
+                 skip_same_file: bool, progress: jSeaFileProgress = None):
+
+        if self.IsExistDirectory(seafile_path):
+            return self.DownloadFolder(seafile_path,
+                                       output_folder_path,
+                                       skip_same_file,
+                                       progress)
+
+        download_items: list[jSeaFileItem] = self.GetSubItemAll(seafile_path)
+        if download_items is None and len(download_items) != 1:
+            return False
+
+        seafilename = __class__.__GetFileName(seafile_path)
+        item = download_items[0]
+
+        if skip_same_file:
+            out_path = GetCombinePath(output_folder_path, seafilename)
+
+            if os.path.exists(out_path) and \
+               os.path.isdir(out_path) is False and \
+               os.path.getsize(out_path) == item.size and \
+               datetime.fromtimestamp(os.path.getmtime(out_path)) == item.last_modified:
+                # 이미 파일이 있다
+                return True
+
+        total_size = item.size
+
+        if progress is not None:
+            progress.SetStartSummary(total_size)
+
+        # 선택된 대상이 파일이었으면 그대로 출력
+        out_path = GetCombinePath(output_folder_path, seafilename)
+        link = self.GetDownloadFileLink(item.full_path)
+        if link is None:
+            return False
+
+        try:
+            if progress is None:
+                urlReqeust.urlretrieve(link, out_path)
+            else:
+                progress.Init(item.name)
+                urlReqeust.urlretrieve(link,
+                                       out_path,
+                                       progress.Doing)
+                progress.End()
+
+            tm = time.mktime(item.last_modified.timetuple())
+            os.utime(out_path, (tm, tm))
+
+        except Exception:
+            return False
 
         return True
 
@@ -461,7 +522,8 @@ class jSeaFile:
 
     def __GetResponseUsingToken(self, relative_url: str,
                                 parameters: dict[str, str] = None,
-                                post: str = None):
+                                post: str = None,
+                                method: str = None):
         url_address = self.url + relative_url
         if parameters is not None:
             first = True
@@ -478,7 +540,7 @@ class jSeaFile:
             if post is not None:
                 post = post.encode('utf-8')
 
-            url = urlReqeust.Request(url_address, post)
+            url = urlReqeust.Request(url_address, post, method=method)
             url.add_header("Authorization", "Token " + self.apiToken)
             url.add_header("Accept",
                            "application/json; charset=utf-8 indent=4")

@@ -58,15 +58,18 @@ class jConsoleParser:
         self.check_waiting_options: list[jConsoleOption] = []
         self.__command_link_: dict = {}
 
+    @classmethod
     def PrintErrorLn(cls, error_code: int, text: str):
         if error_code >= 0:
             cls.PrintLn(f'[error:{error_code:04d}] {text}')
         else:
             cls.PrintLn('[error:xxxx] ' + text)
 
+    @classmethod
     def PrintLn(cls, text: str = ''):
         print(text, flush=True)
 
+    @classmethod
     def Print(cls, text: str):
         print(text, end='', flush=True)
 
