@@ -90,6 +90,7 @@ class jSeaFile:
     url: str = ""
     apiToken: str = ""
     repo_id: str = ""
+    requestCancel: bool = False
 
     def SetAddress(self, url: str):
         self.url = url
@@ -259,14 +260,25 @@ class jSeaFile:
                     return False
 
                 try:
-                    if progress is None:
-                        urlReqeust.urlretrieve(link, out_path)
-                    else:
-                        progress.Init(item.name)
-                        urlReqeust.urlretrieve(link,
-                                               out_path,
-                                               progress.Doing)
-                        progress.End()
+                    progress.Init(item.name)
+                    with urllib.request.urlopen(link) as response:
+                        with open(out_path, 'wb') as out_file:
+                            CHUNK_SIZE = 1024 * 1024
+                            block_num = 0
+
+                            while True:
+                                chunk = response.read(CHUNK_SIZE)
+                                block_num = block_num + 1
+                                if not chunk:
+                                    break
+                                if self.requestCancel:
+                                    return False
+
+                                out_file.write(chunk)
+
+                                if progress is not None:
+                                    progress.Doing(block_num, CHUNK_SIZE, total_size)
+                            progress.End()
 
                     tm = time.mktime(item.last_modified.timetuple())
                     os.utime(out_path, (tm, tm))
@@ -314,19 +326,31 @@ class jSeaFile:
             return False
 
         try:
-            if progress is None:
-                urlReqeust.urlretrieve(link, out_path)
-            else:
-                progress.Init(item.name)
-                urlReqeust.urlretrieve(link,
-                                       out_path,
-                                       progress.Doing)
-                progress.End()
+            progress.Init(item.name)
+            with urllib.request.urlopen(link) as response:
+                with open(out_path, 'wb') as out_file:
+                    CHUNK_SIZE = 1024 * 1024
+                    block_num = 0
+
+                    while True:
+                        chunk = response.read(CHUNK_SIZE)
+                        block_num = block_num + 1
+                        if not chunk:
+                            break
+                        if self.requestCancel:
+                            return False
+
+                        out_file.write(chunk)
+
+                        if progress is not None:
+                            progress.Doing(block_num, CHUNK_SIZE, total_size)
+
+                    progress.End()
 
             tm = time.mktime(item.last_modified.timetuple())
             os.utime(out_path, (tm, tm))
 
-        except Exception:
+        except Exception as e:
             return False
 
         return True
@@ -501,8 +525,7 @@ class jSeaFile:
             return ""
 
     def RequestCancel(self):
-        # 아직 구현되지 않음
-        pass
+        self.requestCancel = True
 
     def __ParseResponseText(text: str):
         if len(text) >= 2:
