@@ -10,16 +10,16 @@ import locale
 import os
 from getpass import getpass
 
-from jconsole.parser import jConsoleParser as jCP
-from jconsole.parser import jConsoleParseResult as jCPResult
-from seafile import jSeaFile, jSeaFileProgress
+from jconsole.parser import JConsoleParser as jCP
+from jconsole.parser import JConsoleParseResult as jCPResult
+from seafile import JSeaFile, JSeaFileProgress
 from environment import Environment
 from res import LoadResourceText
-from j18console.config import j18Config
+from j18console.config import J18Config
 from j18console.progress import ConsolePorgress
 
 
-class error_code(Enum):
+class ErrorCode(Enum):
     success = 0
     too_much_command = 1
     unknown_argument = 2
@@ -29,44 +29,44 @@ class error_code(Enum):
     option_duplication = 6
 
 
-class j18Main (jCP):
+class J18Main (jCP):
     def __init__(self):
         super().__init__()
         self.progressDownload = ConsolePorgress(True)
         self.progressUpload = ConsolePorgress(False)
-        self.seafile = jSeaFile()
-        self.config = j18Config()
+        self.seafile = JSeaFile()
+        self.config = J18Config()
         self.target = "/"
         self.dest = os.getcwd()
         self.skip_same_file = False
-        self.AddCommandLink('--help', self.__CommandHelp)
-        self.AddCommandLink('--version', self.__CommandVersion)
-        self.AddCommandLink('--show-config', self.__CommandShowConfig)
-        self.AddCommandLink('--get-token', self.__CommandGetToken)
-        self.AddCommandLink('--get-repo-list', self.__CommandGetRepoList)
-        self.AddCommandLink('--filedetail', self.__CommandFileDetail)
-        self.AddCommandLink('--download', self.__CommandDownload)
-        self.AddCommandLink('--mkdir', self.__CommandCreateDirectory)
-        self.AddCommandLink('--ls', self.__CommandLs)
-        self.AddCommandLink('--upload', self.__CommandUpload)
-        self.AddCommandLink('--validate', self.CommandValidate)
+        self.add_commandlink('--help', self.__command_help)
+        self.add_commandlink('--version', self.__command_version)
+        self.add_commandlink('--show-config', self.__command_showconfig)
+        self.add_commandlink('--get-token', self.__command_gettoken)
+        self.add_commandlink('--get-repo-list', self.__command_getrepolist)
+        self.add_commandlink('--filedetail', self.__command_filedetail)
+        self.add_commandlink('--download', self.__command_download)
+        self.add_commandlink('--mkdir', self.__command_create_directory)
+        self.add_commandlink('--ls', self.__command_ls)
+        self.add_commandlink('--upload', self.__command_upload)
+        self.add_commandlink('--validate', self.command_validate)
 
-    def ApplyOptions(self):
+    def apply_options(self):
         # 다음순서 Option을 체크하며 순서대로 읽는다
         options: dict = {
-            "-skip-same-file": self.__ApplyOptionSkipSameFile,
-            "-update-line-by-step": self.__ApplyOptionUpdateLineByStep,
-            "-r": self.__ApplyOptionRepository,
-            "-t": self.__ApplyOptionTarget,
-            "-d": self.__ApplyOptionDestination,
-            "-s": self.__ApplyOptionServer,
-            "-c": self.__ApplyOptionConnection
+            "-skip-same-file": self.__applyoption_skipsamefile,
+            "-update-line-by-step": self.__applyoption_updatelinebystep,
+            "-r": self.__applyoption_repository,
+            "-t": self.__applyoption_target,
+            "-d": self.__applyoption_destination,
+            "-s": self.__applyoption_server,
+            "-c": self.__applyoption_connection
             }
 
         for option, function in options.items():
-            res = self.CheckOption(option)
+            res = self.check_option(option)
             if res.result != jCPResult.OK:
-                jCP.PrintErrorLn(error_code.option_duplication.value,
+                jCP.printerrorln(ErrorCode.option_duplication.value,
                                  res.message)
                 return False
 
@@ -74,285 +74,285 @@ class j18Main (jCP):
                 continue
 
             if not function(res.option_value):
-                jCP.PrintErrorLn(error_code.option_is_wrong.value,
+                jCP.printerrorln(ErrorCode.option_is_wrong.value,
                                  'option is wrong: ' + option)
                 return False
 
         if len(self.check_waiting_options) == 0:
             return True
 
-        optionKey = self.check_waiting_options[0].key
+        option_key = self.check_waiting_options[0].key
 
-        jCP.PrintErrorLn(error_code.unknown_argument.value,
-                         "unkown argument: " + optionKey)
+        jCP.printerrorln(ErrorCode.unknown_argument.value,
+                         "unkown argument: " + option_key)
         return False
 
-    def __CommandHelp(self):
+    def __command_help(self):
         version = Environment.version
-        jCP.Print(f'j18 version {version} copyright(c) 2023. ')
-        jCP.PrintLn('juno-studio all rights reserved.')
-        jCP.PrintLn()
+        jCP.print(f'j18 version {version} copyright(c) 2023. ')
+        jCP.println('juno-studio all rights reserved.')
+        jCP.println()
 
-        currentLocale = str(locale.getlocale()[0])
+        current_locale = str(locale.getlocale()[0])
 
         # Windows에서는 locale 이름이 다르다
-        if currentLocale == "Korean_Korea":
-            currentLocale = "ko_KR"
+        if current_locale == "Korean_Korea":
+            current_locale = "ko_KR"
 
-        text = LoadResourceText(f"help_{currentLocale}.txt")
+        text = LoadResourceText(f"help_{current_locale}.txt")
         if text == "":
             text = LoadResourceText("help_en_US.txt")
 
-        jCP.PrintLn(text)
+        jCP.println(text)
 
-        return error_code.success
+        return ErrorCode.success
 
-    def __CommandVersion(self):
-        jCP.PrintLn(Environment.version)
-        return error_code.success
+    def __command_version(self):
+        jCP.println(Environment.version)
+        return ErrorCode.success
 
-    def __CommandShowConfig(self):
+    def __command_showconfig(self):
         try:
             with open(os.path.expanduser("~/.j18/") + "config",
                       "r",
                       encoding='UTF8') as config_file:
-                jCP.PrintLn(config_file.read())
+                jCP.println(config_file.read())
         except Exception:
-            jCP.PrintLn("Config file not found")
-        return error_code.success
+            jCP.println("Config file not found")
+        return ErrorCode.success
 
-    def __CommandGetToken(self):
+    def __command_gettoken(self):
         if self.config.address == "":
-            jCP.PrintErrorLn(-1, 'The following options are required.')
-            jCP.PrintErrorLn(-1, 'option: -s:{ServerName}')
-            return error_code.valid_failed
+            jCP.printerrorln(-1, 'The following options are required.')
+            jCP.printerrorln(-1, 'option: -s:{ServerName}')
+            return ErrorCode.valid_failed
 
         user_name = input("user_name:")
         password = getpass("password:")
-        token = self.seafile.GetApiToken(user_name, password)
+        token = self.seafile.get_api_token(user_name, password)
         if token == "":
-            jCP.PrintErrorLn(-1, 'get-token failed')
-            return error_code.command_failed
+            jCP.printerrorln(-1, 'get-token failed')
+            return ErrorCode.command_failed
 
-        jCP.PrintLn('token:' + token)
-        return error_code.success
+        jCP.println('token:' + token)
+        return ErrorCode.success
 
-    def __CommandGetRepoList(self):
+    def __command_getrepolist(self):
         if self.config.address == "":
-            jCP.PrintLn('[error:xxxx] The following options are required.')
-            jCP.PrintLn('[error:xxxx] option: -s:{ServerName}')
-            return error_code.valid_failed
+            jCP.println('[error:xxxx] The following options are required.')
+            jCP.println('[error:xxxx] option: -s:{ServerName}')
+            return ErrorCode.valid_failed
 
-        items = self.seafile.GetRepositoryList()
+        items = self.seafile.get_repositorylist()
         if items is None:
-            jCP.PrintErrorLn(-1, 'Get Repository List Failed')
-            return error_code.command_failed
+            jCP.printerrorln(-1, 'Get Repository List Failed')
+            return ErrorCode.command_failed
 
         for item in items:
-            jCP.PrintLn(item.name + "(" + item.permission + ") -> " + item.id)
+            jCP.println(item.name + "(" + item.permission + ") -> " + item.id)
 
-        return error_code.success
+        return ErrorCode.success
 
-    def __CommandFileDetail(self):
-        info = self.seafile.GetFileDetail(self.target)
+    def __command_filedetail(self):
+        info = self.seafile.get_filedetail(self.target)
         if info is not None:
-            jCP.PrintLn(" ID: " + info.id)
-            jCP.PrintLn(" Last Modifier Name: " + info.last_modifier_name)
-            jCP.PrintLn(" Last Modified: " + str(info.last_modified))
-            jCP.PrintLn(" Size: " + str(info.size))
-            return error_code.success
+            jCP.println(" ID: " + info.id)
+            jCP.println(" Last Modifier Name: " + info.last_modifier_name)
+            jCP.println(" Last Modified: " + str(info.last_modified))
+            jCP.println(" Size: " + str(info.size))
+            return ErrorCode.success
         else:
-            jCP.PrintErrorLn(-1, 'File not found : ' + self.target)
-            return error_code.command_failed
+            jCP.printerrorln(-1, 'File not found : ' + self.target)
+            return ErrorCode.command_failed
 
-    def __CommandDownload(self):
-        progress = jSeaFileProgress(self.progressDownload)
+    def __command_download(self):
+        progress = JSeaFileProgress(self.progressDownload)
 
-        if self.seafile.Download(self.target,
+        if self.seafile.download(self.target,
                                  self.dest,
                                  self.skip_same_file,
                                  progress):
-            jCP.PrintLn("download success")
-            return error_code.success
+            jCP.println("download success")
+            return ErrorCode.success
         else:
-            jCP.PrintLn("\n[error:xxxx] download failed")
-            return error_code.command_failed
+            jCP.println("\n[error:xxxx] download failed")
+            return ErrorCode.command_failed
 
-    def __CommandCreateDirectory(self):
-        success = self.seafile.CreateDirectory(self.target)
+    def __command_create_directory(self):
+        success = self.seafile.create_directory(self.target)
         if success:
-            jCP.PrintLn("Success")
-            return error_code.success
+            jCP.println("Success")
+            return ErrorCode.success
         else:
-            jCP.PrintErrorLn(-1, 'Failed to Create Directory : ' + self.target)
-            return error_code.command_failed
+            jCP.printerrorln(-1, 'Failed to Create Directory : ' + self.target)
+            return ErrorCode.command_failed
 
-    def __CommandLs(self):
-        items = self.seafile.GetListItemsInDirectory(self.target)
+    def __command_ls(self):
+        items = self.seafile.get_listitems_in_directory(self.target)
         if items is None:
             folder = self.target
-            jCP.PrintErrorLn(-1, f"Get Item List (Target Directory={folder})")
-            return error_code.command_failed
+            jCP.printerrorln(-1, f"Get Item List (Target Directory={folder})")
+            return ErrorCode.command_failed
 
         if len(items) != 0:
             for item in items:
                 if item.is_directory:
-                    jCP.PrintLn("[D] " + item.name)
+                    jCP.println("[D] " + item.name)
                 else:
-                    jCP.PrintLn(f"[F] {item.name} ({item.size} bytes)")
+                    jCP.println(f"[F] {item.name} ({item.size} bytes)")
 
-        return error_code.success
+        return ErrorCode.success
 
-    def __CommandUpload(self):
-        link: str = self.seafile.GetUploadFileLink(self.target)
+    def __command_upload(self):
+        link: str = self.seafile.get_uploadlink(self.target)
         if link is None:
-            jCP.PrintErrorLn(-1, 'get upload file link failed')
-            return error_code.command_failed
+            jCP.printerrorln(-1, 'get upload file link failed')
+            return ErrorCode.command_failed
 
-        progress = jSeaFileProgress(self.progressUpload)
+        progress = JSeaFileProgress(self.progressUpload)
 
-        if jSeaFile.UploadFile(link, self.target, self.dest, progress):
-            jCP.PrintLn("upload success")
-            return error_code.success
+        if JSeaFile.uploadfile(link, self.target, self.dest, progress):
+            jCP.println("upload success")
+            return ErrorCode.success
         else:
-            jCP.PrintLn()
-            jCP.PrintErrorLn(-1, 'upload failed')
-            return error_code.command_failed
+            jCP.println()
+            jCP.printerrorln(-1, 'upload failed')
+            return ErrorCode.command_failed
 
-    def CommandValidate(self, show_success_message: bool = True):
-        if self.seafile.CheckAddress() is False:
+    def command_validate(self, show_success_message: bool = True):
+        if self.seafile.check_address() is False:
             address = self.config.address
-            jCP.PrintErrorLn(1, f'Connect Failed (Address:{address})')
-            return error_code.valid_failed
+            jCP.printerrorln(1, f'Connect Failed (Address:{address})')
+            return ErrorCode.valid_failed
 
         if self.config.token != '':
             # Token이 세팅되어 있으니 Token 문제 없나 체크
-            if self.seafile.CheckToken() is False:
+            if self.seafile.check_token() is False:
                 token = self.config.token
-                jCP.PrintErrorLn(2, f'Permission declined (Token:{token})')
-                return error_code.valid_failed
+                jCP.printerrorln(2, f'Permission declined (Token:{token})')
+                return ErrorCode.valid_failed
 
             # Repos가 세팅되어 있으니 Repos 체크
             if self.config.repos_id != '':
                 found = False
-                for item in self.seafile.GetRepositoryList():
+                for item in self.seafile.get_repositorylist():
                     if item.id == self.config.repos_id:
                         found = True
                         break
 
                 if found is False:
-                    reposId = self.config.repos_id
-                    jCP.PrintErrorLn(3, f'Repos not found (Repos:{reposId})')
-                    return error_code.valid_failed
+                    repos_id = self.config.repos_id
+                    jCP.printerrorln(3, f'Repos not found (Repos:{repos_id})')
+                    return ErrorCode.valid_failed
 
         if show_success_message:
-            jCP.PrintLn("OK")
+            jCP.println("OK")
 
-        return error_code.success
+        return ErrorCode.success
 
-    def __ApplyOptionSkipSameFile(self, value: str):
+    def __applyoption_skipsamefile(self, value: str):
         self.skip_same_file = True
         return True
 
-    def __ApplyOptionUpdateLineByStep(self, value: str):
+    def __applyoption_updatelinebystep(self, value: str):
         self.progressDownload.update_line_by_step = True
         self.progressUpload.update_line_by_step = True
         return True
 
-    def __ApplyOptionRepository(self, value: str):
-        if self._SetRepository(value) is False:
+    def __applyoption_repository(self, value: str):
+        if self._set_repository(value) is False:
             return False
         return True
 
-    def __ApplyOptionTarget(self, value: str):
+    def __applyoption_target(self, value: str):
         self.target = value
         return True
 
-    def __ApplyOptionDestination(self, value: str):
+    def __applyoption_destination(self, value: str):
         self.dest = os.path.expanduser(value)
         return True
 
-    def __ApplyOptionServer(self, value: str):
-        if self._SetServer(value) is False:
+    def __applyoption_server(self, value: str):
+        if self._set_server(value) is False:
             return False
         return True
 
-    def __ApplyOptionConnection(self, value: str):
-        if self._SetServerAndRepository(value) is False:
+    def __applyoption_connection(self, value: str):
+        if self._set_server_and_repository(value) is False:
             return False
         return True
 
-    def _SetServer(self, argument: str):
-        self.config.SetServer(argument)
+    def _set_server(self, argument: str):
+        self.config.set_server(argument)
         if self.config.address == '':
-            jCP.PrintLn('[error:0004] Unknown Server Name: ' + argument)
+            jCP.println('[error:0004] Unknown Server Name: ' + argument)
             return False
 
-        self.seafile.SetAddress(self.config.address)
-        self.seafile.SetApiToken(self.config.token)
+        self.seafile.set_address(self.config.address)
+        self.seafile.set_api_token(self.config.token)
 
         if self.config.address == '':
-            jCP.PrintLn('[ER] Addess is empty: ')
+            jCP.println('[ER] Addess is empty: ')
             return False
 
         return True
 
-    def _SetRepository(self, argument: str):
-        self.config.SetRepository(argument)
+    def _set_repository(self, argument: str):
+        self.config.set_repository(argument)
         if self.config.repos_id == '':
-            jCP.PrintLn('[error:0005] Unknown Repository Name: ' + argument)
+            jCP.println('[error:0005] Unknown Repository Name: ' + argument)
             return False
 
-        self.seafile.SetRepositoryId(self.config.repos_id)
+        self.seafile.set_repository_id(self.config.repos_id)
         return True
 
-    def _SetServerAndRepository(self, argument: str):
-        self.config.SetServerAndRepository(argument)
+    def _set_server_and_repository(self, argument: str):
+        self.config.set_server_and_repository(argument)
         if self.config.address == '':
-            jCP.PrintLn('[error:xxxx] -c:{ConnectionName}')
-            jCP.PrintLn('[error:xxxx] Unknown Connection Name: ' + argument)
+            jCP.println('[error:xxxx] -c:{ConnectionName}')
+            jCP.println('[error:xxxx] Unknown Connection Name: ' + argument)
             return False
 
-        self.seafile.SetAddress(self.config.address)
-        self.seafile.SetApiToken(self.config.token)
+        self.seafile.set_address(self.config.address)
+        self.seafile.set_api_token(self.config.token)
 
         if self.config.address == '':
-            jCP.PrintLn('[error:xxxx] Addess is empty: ')
+            jCP.println('[error:xxxx] Addess is empty: ')
             return False
 
         if self.config.repos_id == '':
-            jCP.PrintLn('[error:xxxx] Repository ID is empty: ')
+            jCP.println('[error:xxxx] Repository ID is empty: ')
             return False
 
-        self.seafile.SetRepositoryId(self.config.repos_id)
+        self.seafile.set_repository_id(self.config.repos_id)
         return True
 
 
-def Run():
-    main = j18Main()
-    result = main.CheckArguments()
+def run():
+    main = J18Main()
+    result = main.check_arguments()
 
     if result == jCPResult.TOO_MOUCH_COMMAND:
-        jCP.PrintErrorLn(error_code.too_much_command.value,
+        jCP.printerrorln(ErrorCode.too_much_command.value,
                          'limit to only use a single command ')
         return
 
     if result == jCPResult.UNKNOWN_ARGUMENT:
-        jCP.PrintErrorLn(error_code.unknown_argument.value,
+        jCP.printerrorln(ErrorCode.unknown_argument.value,
                          'unknown argument')
         return
 
     if result == jCPResult.UNKNOWN_COMMAND:
-        jCP.PrintErrorLn(error_code.unknown_argument.value,
+        jCP.printerrorln(ErrorCode.unknown_argument.value,
                          'unknown command: ' + main.command)
         return
 
-    if main.ApplyOptions() is False:
+    if main.apply_options() is False:
         return
 
-    if main.ExecuteCommand() == error_code.command_failed:
-        main.CommandValidate(False)
+    if main.execute_command() == ErrorCode.command_failed:
+        main.command_validate(False)
 
 
 if __name__ == "__main__":
-    Run()
+    run()

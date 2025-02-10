@@ -9,15 +9,15 @@ import platform
 import subprocess as subp
 
 
-class jConsoleRunner:
+class JConsoleRunner:
     def __init__(self):
         self.processor: subp.Popen = None
 
-    def Execute(self, executeFilePath: str, arguments: list[str]):
+    def execute(self, execute_filepath: str, arguments: list[str]):
         self.processor = None
 
         args: list = []
-        args.append(executeFilePath)
+        args.append(execute_filepath)
         for argument in arguments:
             args.append(argument)
 
@@ -33,17 +33,17 @@ class jConsoleRunner:
 
         return self.processor is not None
 
-    def IsRunning(self):
+    def is_running(self):
         return self.processor is not None
 
-    def Terminate(self):
+    def terminate(self):
         if self.processor is None:
             return
 
         self.processor.kill()
         self.processor = None
 
-    def ReadOutput(self) -> str:
+    def read_output(self) -> str:
         while True:
             line: bytes = self.processor.stdout.readline()
 

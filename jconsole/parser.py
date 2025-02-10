@@ -2,7 +2,7 @@
  version 0.2
  blog: https://junostudio.tistory.com/
  git: https://github.com/junostudio3/jconsole
-    jConsoleParser
+    JConsoleParser
     - Argument Parsing
       @ 인자로 받은 argument를 이용하여 다음의 변수를 세팅한다 @
 
@@ -20,7 +20,7 @@ import sys
 from enum import Enum
 
 
-class jConsoleParseResult(Enum):
+class JConsoleParseResult(Enum):
     OK = 1
     TOO_MOUCH_COMMAND = 2
     UNKNOWN_ARGUMENT = 3
@@ -28,59 +28,59 @@ class jConsoleParseResult(Enum):
     OPTION_DUPLICATION = 5  # 옵션이 중복됨
 
 
-class jConsoleCheckOptionResult:
+class JConsoleCheckOptionResult:
     def __init__(self):
         self.is_exist: bool = False
         self.message: str = ""
         self.option_value: str = ""
-        self.result: jConsoleParseResult = jConsoleParseResult.OK
+        self.result: JConsoleParseResult = JConsoleParseResult.OK
 
-    def SetErrror(self, message: str, result: jConsoleParseResult):
+    def set_error(self, message: str, result: JConsoleParseResult):
         self.message: str = message
-        self.result: jConsoleParseResult = result
+        self.result: JConsoleParseResult = result
 
 
-class jConsoleOption:
+class JConsoleOption:
     def __init__(self):
         self.key: str = ""
         self.value: str = ""
 
 
-class jConsoleParser:
+class JConsoleParser:
     def __init__(self):
         self.__arguments: list[str] = []
         for index in range(len(sys.argv) - 1):
             self.__arguments.append(sys.argv[index + 1])
 
-        self.result: jConsoleParseResult = jConsoleParseResult.OK
+        self.result: JConsoleParseResult = JConsoleParseResult.OK
         self.command: str = ''
-        self.options: list[jConsoleOption] = []
-        self.check_waiting_options: list[jConsoleOption] = []
+        self.options: list[JConsoleOption] = []
+        self.check_waiting_options: list[JConsoleOption] = []
         self.__command_link_: dict = {}
 
     @classmethod
-    def PrintErrorLn(cls, error_code: int, text: str):
+    def printerrorln(cls, error_code: int, text: str):
         if error_code >= 0:
-            cls.PrintLn(f'[error:{error_code:04d}] {text}')
+            cls.println(f'[error:{error_code:04d}] {text}')
         else:
-            cls.PrintLn('[error:xxxx] ' + text)
+            cls.println('[error:xxxx] ' + text)
 
     @classmethod
-    def PrintLn(cls, text: str = ''):
+    def println(cls, text: str = ''):
         print(text, flush=True)
 
     @classmethod
-    def Print(cls, text: str):
+    def print(cls, text: str):
         print(text, end='', flush=True)
 
-    def AddCommandLink(self, command: str, function):
+    def add_commandlink(self, command: str, function):
         self.__command_link_[command] = function
 
-    def CheckArguments(self):
-        if not self._CheckGrammar():
-            return jConsoleParseResult.UNKNOWN_ARGUMENT
+    def check_arguments(self):
+        if not self._check_grammar():
+            return JConsoleParseResult.UNKNOWN_ARGUMENT
 
-        candidate_command_list = self._CollectCommand()
+        candidate_command_list = self._collect_command()
         if len(candidate_command_list) == 0:
             # command가 없다면 --help 동작으로 동작
             self.command = '--help'
@@ -88,23 +88,23 @@ class jConsoleParser:
             self.command = candidate_command_list[0]
         else:
             # Command가 하나 이상 존재한다
-            return jConsoleParseResult.TOO_MOUCH_COMMAND
+            return JConsoleParseResult.TOO_MOUCH_COMMAND
 
-        self.check_waiting_options = self._CollectOption()
+        self.check_waiting_options = self._collect_option()
 
         if self.command not in self.__command_link_:
-            return jConsoleParseResult.UNKNOWN_COMMAND
+            return JConsoleParseResult.UNKNOWN_COMMAND
 
-        return jConsoleParseResult.OK
+        return JConsoleParseResult.OK
 
-    def CheckOption(self, option_key: str) -> jConsoleCheckOptionResult:
-        res = jConsoleCheckOptionResult()
+    def check_option(self, option_key: str) -> JConsoleCheckOptionResult:
+        res = JConsoleCheckOptionResult()
         for item in self.check_waiting_options[:]:  # list 복사해서 for
             if item.key == option_key:
                 if res.is_exist:
                     # 이미 찾은 옵션을 또 찾았다
-                    res.SetErrror("Duplication Option <" + item.key + ">",
-                                  jConsoleParseResult.OPTION_DUPLICATION)
+                    res.set_error("Duplication Option <" + item.key + ">",
+                                  JConsoleParseResult.OPTION_DUPLICATION)
                     return res
                 self.options.append(item)
                 self.check_waiting_options.remove(item)
@@ -113,11 +113,11 @@ class jConsoleParser:
 
         return res
 
-    def ExecuteCommand(self):
+    def execute_command(self):
         if self.command in self.__command_link_:
             self.__command_link_[self.command]()
 
-    def _CheckGrammar(self):
+    def _check_grammar(self):
         for argument in self.__arguments:
             if argument[:2] == '--':
                 continue
@@ -126,7 +126,7 @@ class jConsoleParser:
                 return False
         return True
 
-    def _CollectCommand(self):
+    def _collect_command(self):
         # command argument를 찾는다
         command_list: list[str] = []
         for arg_index in range(1, len(self.__arguments)):
@@ -137,15 +137,15 @@ class jConsoleParser:
             command_list.append(argument)
         return command_list
 
-    def _CollectOption(self):
-        option_list: list[jConsoleOption] = []
+    def _collect_option(self):
+        option_list: list[JConsoleOption] = []
 
         for argument in self.__arguments:
             if argument[:2] == '--':
                 # 명령은 넘어가자
                 continue
 
-            option = jConsoleOption()
+            option = JConsoleOption()
             option.key = argument.lower()
 
             sub_option_index = argument.find(':')
