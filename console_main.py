@@ -70,7 +70,7 @@ class J18Main (jCP):
                                  res.message)
                 return False
 
-            if not res.is_exist:
+            if not res.isexist:
                 continue
 
             if not function(res.option_value):

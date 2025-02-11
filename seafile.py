@@ -127,7 +127,7 @@ class JSeaFile:
             return False
         return True
 
-    def is_exist_directory(self, dir_path: str):
+    def isexist_directory(self, dir_path: str):
         # /dir/detail 명령이 동작하지 않아서 /dir/ 명령을 사용했다
         url = '/api2/repos/' + self.repo_id + '/dir/'
         json_object = self.__get_response_json_using_token(url, {'p': dir_path})
@@ -136,7 +136,7 @@ class JSeaFile:
 
         return True
 
-    def is_exist_file(self, filepath: str):
+    def isexist_file(self, filepath: str):
         # /file/detail 명령으로 체크함
         if self.get_filedetail(filepath) is None:
             return False
@@ -291,7 +291,7 @@ class JSeaFile:
     def download(self, seafile_path: str, output_folder_path: str,
                  skip_same_file: bool, progress: JSeaFileProgress = None):
 
-        if self.is_exist_directory(seafile_path):
+        if self.isexist_directory(seafile_path):
             return self.download_folder(seafile_path,
                                         output_folder_path,
                                         skip_same_file,

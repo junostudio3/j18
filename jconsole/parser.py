@@ -30,7 +30,7 @@ class JConsoleParseResult(Enum):
 
 class JConsoleCheckOptionResult:
     def __init__(self):
-        self.is_exist: bool = False
+        self.isexist: bool = False
         self.message: str = ""
         self.option_value: str = ""
         self.result: JConsoleParseResult = JConsoleParseResult.OK
@@ -101,7 +101,7 @@ class JConsoleParser:
         res = JConsoleCheckOptionResult()
         for item in self.check_waiting_options[:]:  # list 복사해서 for
             if item.key == option_key:
-                if res.is_exist:
+                if res.isexist:
                     # 이미 찾은 옵션을 또 찾았다
                     res.set_error("Duplication Option <" + item.key + ">",
                                   JConsoleParseResult.OPTION_DUPLICATION)
@@ -109,7 +109,7 @@ class JConsoleParser:
                 self.options.append(item)
                 self.check_waiting_options.remove(item)
                 res.option_value = item.value
-                res.is_exist = True
+                res.isexist = True
 
         return res
 
